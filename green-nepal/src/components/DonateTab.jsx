@@ -17,7 +17,7 @@ const DonateTab = ({ isDark }) => {
       <div className={`border-4 border-dashed rounded-xl p-8 mb-6 inline-block transform hover:scale-105 transition duration-300 ${isDark ? 'border-gray-600 bg-gray-700' : 'border-green-200 bg-green-50'}`}>
         <div className="bg-white p-2 rounded-lg inline-block mb-3">
            <img
-             src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=eSewa-9841234567"
+             src="assets/sc.png"
              alt="eSewa QR Code"
              className="w-48 h-48 mx-auto"
            />

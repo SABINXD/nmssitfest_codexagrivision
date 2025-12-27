@@ -6,11 +6,22 @@ const PlannerTab = ({ isDark, onAddTask, setActiveTab }) => {
   const [selectedCrop, setSelectedCrop] = useState('');
   const [loading, setLoading] = useState(false);
   const [plan, setPlan] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [errorMsgNe, setErrorMsgNe] = useState(null);
+
+  const examplePlan = [
+    { stage: 'Preparation', date: 'Week 1-2', advice_en: 'Clear field, prepare soil with compost', advice_ne: 'तयारी: फिल्ड सफा गर्नुहोस् र कम्पोस्ट राख्नुहोस्' },
+    { stage: 'Sowing', date: 'Week 3', advice_en: 'Sow seeds at recommended spacing', advice_ne: 'बिउ रोप्नुहोस् र सिफारिस गरिएको दूरीमा राख्नुहोस्' },
+    { stage: 'Care', date: 'Week 4-12', advice_en: 'Water regularly and monitor for pests', advice_ne: 'नियमित पानी दिईरहनुहोस् र कीडा जाँच गर्नुहोस्' },
+    { stage: 'Harvest', date: 'Week 13-14', advice_en: 'Harvest when crops mature', advice_ne: 'फसल पाकेपछि छानी सङ्कलन गर्नुहोस्' },
+  ];
 
   const generatePlan = async () => {
     if (!selectedCrop) return;
     setLoading(true);
     setPlan(null);
+    setErrorMsg(null);
+    setErrorMsgNe(null);
 
     try {
       const prompt = `
@@ -33,10 +44,33 @@ const PlannerTab = ({ isDark, onAddTask, setActiveTab }) => {
       if (text) {
         const cleanText = text.replace(/```json/g, '').replace(/```/g, '');
         setPlan(JSON.parse(cleanText));
+      } else {
+        throw new Error('No response from API');
       }
     } catch (error) {
-      console.error(error);
-      alert("Could not generate plan. Try again.");
+      console.error('Planner generatePlan error:', error);
+
+      // Determine a helpful message
+      let msg = 'Please check your connection or API key.';
+      let msgNe = 'कृपया आफ्नो इन्टरनेट जडान वा API कुञ्जी जाँच गर्नुहोस्।';
+      const em = String(error?.message || '').toLowerCase();
+      if (em.includes('failed to fetch')) {
+        msg = 'Network error - check your internet connection.';
+        msgNe = 'नेटवर्क त्रुटि - आफ्नो इन्टरनेट जडान जाँच गर्नुहोस्।';
+      } else if (em.includes('401') || em.includes('403')) {
+        msg = 'Invalid API key or permission error. Verify your API key and project.';
+        msgNe = 'अमान्य API कुञ्जी वा अनुमति त्रुटि। कृपया आफ्नो API कुञ्जी र प्रोजेक्ट जाँच गर्नुहोस्।';
+      } else if (em.includes('429') || em.includes('quota')) {
+        msg = 'API quota exceeded. Enable billing or wait until quota resets.';
+        msgNe = 'API कोटा समाप्त भयो। बिलिङ सक्षम गर्नुहोस् वा कोटा रिसेट हुने सम्म पर्खनुहोस्।';
+      }
+
+      setErrorMsg(msg);
+      setErrorMsgNe(msgNe);
+
+      // Offer an example plan so the user can continue testing
+      // Do not automatically set it, instead show a button in the UI
+
     } finally {
       setLoading(false);
     }
@@ -49,7 +83,7 @@ const PlannerTab = ({ isDark, onAddTask, setActiveTab }) => {
         Smart Crop Planner (खेती पात्रो)
       </h2>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-8">
+      <div className="flex flex-col md:flex-row gap-4 mb-4">
         <select 
           value={selectedCrop}
           onChange={(e) => setSelectedCrop(e.target.value)}
@@ -62,14 +96,32 @@ const PlannerTab = ({ isDark, onAddTask, setActiveTab }) => {
           <option value="Mustard (Tori)">Mustard (तोरी)</option>
           <option value="Potato (Aalu)">Potato (आलु)</option>
         </select>
-        <button 
-          onClick={generatePlan}
-          disabled={loading || !selectedCrop}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition disabled:opacity-50 flex items-center justify-center shadow-md hover:shadow-lg"
-        >
-          {loading ? <Loader className="w-5 h-5 animate-spin"/> : 'Generate Plan'}
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={generatePlan}
+            disabled={loading || !selectedCrop}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition disabled:opacity-50 flex items-center justify-center shadow-md hover:shadow-lg"
+          >
+            {loading ? <Loader className="w-5 h-5 animate-spin"/> : 'Generate Plan'}
+          </button>
+
+          <button
+            onClick={() => setPlan(examplePlan)}
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-3 rounded-lg font-medium transition"
+            title="Use an example plan locally"
+          >
+            Example
+          </button>
+        </div>
       </div>
+
+      {errorMsg && (
+        <div className={`mb-4 p-3 rounded-lg ${isDark ? 'bg-red-900 text-red-200' : 'bg-red-50 text-red-800'}`}>
+          <p className="font-semibold">Error:</p>
+          <p className="text-sm">{errorMsg}</p>
+          <p className="text-sm opacity-80 mt-1">{errorMsgNe}</p>
+        </div>
+      )}
 
       {plan && (
         <div className="relative border-l-4 border-indigo-200 ml-4 space-y-8">
