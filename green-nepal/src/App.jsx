@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { Activity, Sun, Moon, TrendingUp, Camera, Calendar, MessageSquare, Sprout, Sparkles } from 'lucide-react';
 import LandingPage from './components/LandingPage.jsx';
-import ScanTab from './components/ScanTab.jsx';
-import DashboardTab from './components/DashboardTab.jsx';
-import PlannerTab from './components/PlannerTab.jsx';
+import ScanTab from './components/scantab.jsx';
+import DashboardTab from './components/dashboardtab.jsx';
+import PlannerTab from './components/plannertab.jsx';
 import TasksTab from './components/TasksTab.jsx';
 import AssistantTab from './components/AssistantTab.jsx';
-
 
 const App = () => {
   const [view, setView] = useState('landing');
