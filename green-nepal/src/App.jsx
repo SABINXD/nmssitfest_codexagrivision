@@ -25,7 +25,6 @@ const App = () => {
   return <PlantHealthApp isDark={isDark} setIsDark={setIsDark} />;
 };
 
-// --- DASHBOARD LAYOUT & LOGIC ---
 const PlantHealthApp = ({ isDark, setIsDark }) => {
   const [activeTab, setActiveTab] = useState('scan');
   const [history, setHistory] = useState([]);
