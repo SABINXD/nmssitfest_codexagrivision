@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Activity, Sun, Moon, TrendingUp, Camera, Calendar, MessageSquare, Sprout, Sparkles } from 'lucide-react';
+import { Activity, Sun, Moon, TrendingUp, Camera, Calendar, MessageSquare, Sprout, Sparkles, Heart } from 'lucide-react';
 import LandingPage from './components/LandingPage.jsx';
 import ScanTab from './components/scantab.jsx';
 import DashboardTab from './components/dashboardtab.jsx';
 import PlannerTab from './components/plannertab.jsx';
 import TasksTab from './components/TasksTab.jsx';
 import AssistantTab from './components/AssistantTab.jsx';
+import DonateTab from './components/DonateTab.jsx';
 
 const App = () => {
   const [view, setView] = useState('landing');
@@ -87,6 +88,7 @@ const PlantHealthApp = ({ isDark, setIsDark }) => {
             { id: 'planner', icon: Sprout, label: 'Plan' },
             { id: 'tasks', icon: Calendar, label: 'Tasks' },
             { id: 'assistant', icon: MessageSquare, label: 'Chat' },
+            { id: 'donate', icon: Heart, label: 'Donate' },
           ].map(tab => (
             <button
               key={tab.id}
@@ -139,6 +141,10 @@ const PlantHealthApp = ({ isDark, setIsDark }) => {
 
         {activeTab === 'assistant' && (
           <AssistantTab isDark={isDark} />
+        )}
+
+        {activeTab === 'donate' && (
+          <DonateTab isDark={isDark} />
         )}
       </div>
     </div>
