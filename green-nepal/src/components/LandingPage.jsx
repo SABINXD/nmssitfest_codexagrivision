@@ -5,13 +5,19 @@ import {
   Smartphone, Zap, Globe, Wind, CloudRain 
 } from 'lucide-react';
 
+// --- Assets (Retrieved Images) ---
+const IMAGES = {
+  farmer: "https://gemini.google.com/share/bf5231585710",
+  crop: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSR7ahvb8aEN76vOIivqeFpa9_gBV5rZm2erw&s",
+  tech: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8dU4M4NmKgHTaM_QDoGmDAIQC3r__CZ5w2Q&s",
+  landscape: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9B3KUKXXay_iM6io2Xow7tZQrbIfhvhCNiw&s"
+};
+
 // --- Utility Hooks & Components ---
 
-// 1. Hook for intersection observer (Scroll Reveal)
 const useOnScreen = (options) => {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
-
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) setVisible(true);
@@ -19,11 +25,9 @@ const useOnScreen = (options) => {
     if (ref.current) observer.observe(ref.current);
     return () => { if (ref.current) observer.unobserve(ref.current); };
   }, [ref, options]);
-
   return [ref, visible];
 };
 
-// 2. Component for counting numbers
 const CountUp = ({ end, duration = 2000 }) => {
   const [count, setCount] = useState(0);
   const [ref, visible] = useOnScreen({ threshold: 0.5 });
@@ -47,8 +51,8 @@ const CountUp = ({ end, duration = 2000 }) => {
   return <span ref={ref}>{count.toLocaleString()}+</span>;
 };
 
-// 3. 3D Tilt Card Component
-const TiltCard = ({ children, className }) => {
+// Enhanced Tilt Card with Image Support
+const TiltCard = ({ children, className, bgImage }) => {
   const [rotate, setRotate] = useState({ x: 0, y: 0 });
 
   const onMouseMove = (e) => {
@@ -68,14 +72,29 @@ const TiltCard = ({ children, className }) => {
 
   return (
     <div
-      className={`transition-transform duration-200 ease-out transform ${className}`}
+      className={`relative overflow-hidden transition-all duration-200 ease-out transform ${className}`}
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
       style={{
         transform: `perspective(1000px) rotateX(${rotate.x}deg) rotateY(${rotate.y}deg) scale3d(1.02, 1.02, 1.02)`,
       }}
     >
-      {children}
+      {/* Background Image Layer */}
+      {bgImage && (
+        <>
+          <div 
+            className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-110"
+            style={{ backgroundImage: `url(${bgImage})` }}
+          />
+          {/* Gradient Overlay for Readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
+        </>
+      )}
+      
+      {/* Content Layer */}
+      <div className="relative z-10 h-full w-full flex flex-col items-center justify-center">
+        {children}
+      </div>
     </div>
   );
 };
@@ -86,14 +105,12 @@ const LandingPage = ({ onLaunch, isDark, setIsDark }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
-  // Handle Scroll for Navbar
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Handle Global Mouse Move for Parallax Background
   useEffect(() => {
     const handleMouseMove = (e) => {
       setMousePos({ 
@@ -105,7 +122,6 @@ const LandingPage = ({ onLaunch, isDark, setIsDark }) => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Custom CSS for animations inserted into the DOM
   const styles = `
     @keyframes float { 0% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-20px) rotate(5deg); } 100% { transform: translateY(0px) rotate(0deg); } }
     @keyframes gradient-x { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
@@ -114,7 +130,6 @@ const LandingPage = ({ onLaunch, isDark, setIsDark }) => {
     @keyframes blink { 50% { border-color: transparent; } }
     
     .animate-float { animation: float 6s ease-in-out infinite; }
-    .animate-float-delayed { animation: float 7s ease-in-out infinite 2s; }
     .animate-gradient-x { background-size: 200% 200%; animation: gradient-x 15s ease infinite; }
     .animate-blob { animation: blob 7s infinite; }
     .typing-cursor { overflow: hidden; white-space: nowrap; border-right: 4px solid #10B981; animation: typewriter 3s steps(40) 1s 1 normal both, blink 0.75s step-end infinite; }
@@ -140,7 +155,6 @@ const LandingPage = ({ onLaunch, isDark, setIsDark }) => {
             {i % 2 === 0 ? <Leaf size={40 + Math.random() * 40} /> : <Sprout size={40 + Math.random() * 40} />}
           </div>
         ))}
-        {/* Animated Gradient Mesh */}
         <div 
           className={`absolute top-0 left-0 w-full h-full opacity-30 filter blur-[100px] animate-gradient-x
           ${isDark 
@@ -201,7 +215,7 @@ const LandingPage = ({ onLaunch, isDark, setIsDark }) => {
           </h1>
           
           <p className={`text-xl mb-10 leading-relaxed max-w-lg transition-opacity duration-500 delay-500 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            Experience the power of AI-driven crop diagnosis, localized farming calendars, and expert assistance tailored for the Himalayas. 
+            AI-driven crop diagnosis and expert assistance, now with real-time visual monitoring for every season.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4">
@@ -219,39 +233,39 @@ const LandingPage = ({ onLaunch, isDark, setIsDark }) => {
           </div>
         </div>
 
-        {/* Hero Visual - Interactive Tilt Cards */}
+        {/* Hero Visual - Interactive PHOTO Tilt Cards */}
         <div className="md:w-1/2 relative perspective-1000">
-          {/* Animated Blobs behind cards */}
           <div className={`absolute top-10 right-10 w-80 h-80 bg-green-400 rounded-full mix-blend-multiply filter blur-[80px] opacity-40 animate-blob ${isDark ? 'mix-blend-overlay opacity-20' : ''}`}></div>
           <div className={`absolute bottom-10 left-10 w-80 h-80 bg-teal-400 rounded-full mix-blend-multiply filter blur-[80px] opacity-40 animate-blob animation-delay-2000 ${isDark ? 'mix-blend-overlay opacity-20' : ''}`}></div>
           
           <div className="relative z-10 grid grid-cols-2 gap-5 transform rotate-3 hover:rotate-0 transition duration-700 ease-out p-4">
-            <TiltCard className={`p-6 rounded-3xl shadow-2xl backdrop-blur-xl border ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-white/70 border-white/60'} flex flex-col items-center justify-center h-48 group`}>
-              <div className="bg-gradient-to-br from-green-100 to-green-200 p-4 rounded-2xl mb-4 group-hover:scale-110 transition-transform duration-300 dark:from-green-900/50 dark:to-green-800/50">
-                <Camera className="w-8 h-8 text-green-600 dark:text-green-400" />
+            
+            <TiltCard bgImage={IMAGES.crop} className={`rounded-3xl shadow-2xl backdrop-blur-xl border ${isDark ? 'border-gray-700' : 'border-white/60'} h-48 group`}>
+              <div className="bg-white/20 backdrop-blur-md p-3 rounded-full mb-2 group-hover:scale-110 transition-transform duration-300 border border-white/30">
+                <Camera className="w-6 h-6 text-white" />
               </div>
-              <span className="font-bold text-lg">AI Diagnosis</span>
+              <span className="font-bold text-lg text-white drop-shadow-md">AI Diagnosis</span>
             </TiltCard>
             
-            <TiltCard className={`p-6 rounded-3xl shadow-2xl backdrop-blur-xl border translate-y-12 ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-white/70 border-white/60'} flex flex-col items-center justify-center h-48 group`}>
-              <div className="bg-gradient-to-br from-indigo-100 to-indigo-200 p-4 rounded-2xl mb-4 group-hover:scale-110 transition-transform duration-300 dark:from-indigo-900/50 dark:to-indigo-800/50">
-                <Sprout className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+            <TiltCard bgImage={IMAGES.landscape} className={`rounded-3xl shadow-2xl backdrop-blur-xl border translate-y-12 ${isDark ? 'border-gray-700' : 'border-white/60'} h-48 group`}>
+              <div className="bg-white/20 backdrop-blur-md p-3 rounded-full mb-2 group-hover:scale-110 transition-transform duration-300 border border-white/30">
+                <Sprout className="w-6 h-6 text-white" />
               </div>
-              <span className="font-bold text-lg">Smart Calendar</span>
+              <span className="font-bold text-lg text-white drop-shadow-md">Smart Calendar</span>
             </TiltCard>
             
-            <TiltCard className={`p-6 rounded-3xl shadow-2xl backdrop-blur-xl border ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-white/70 border-white/60'} flex flex-col items-center justify-center h-48 group`}>
-              <div className="bg-gradient-to-br from-blue-100 to-blue-200 p-4 rounded-2xl mb-4 group-hover:scale-110 transition-transform duration-300 dark:from-blue-900/50 dark:to-blue-800/50">
-                <MessageSquare className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+            <TiltCard bgImage={IMAGES.farmer} className={`rounded-3xl shadow-2xl backdrop-blur-xl border ${isDark ? 'border-gray-700' : 'border-white/60'} h-48 group`}>
+              <div className="bg-white/20 backdrop-blur-md p-3 rounded-full mb-2 group-hover:scale-110 transition-transform duration-300 border border-white/30">
+                <MessageSquare className="w-6 h-6 text-white" />
               </div>
-              <span className="font-bold text-lg">Expert Chat</span>
+              <span className="font-bold text-lg text-white drop-shadow-md">Expert Chat</span>
             </TiltCard>
             
-            <TiltCard className={`p-6 rounded-3xl shadow-2xl backdrop-blur-xl border translate-y-12 ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-white/70 border-white/60'} flex flex-col items-center justify-center h-48 group`}>
-              <div className="bg-gradient-to-br from-orange-100 to-orange-200 p-4 rounded-2xl mb-4 group-hover:scale-110 transition-transform duration-300 dark:from-orange-900/50 dark:to-orange-800/50">
-                <DollarSign className="w-8 h-8 text-orange-600 dark:text-orange-400" />
+            <TiltCard bgImage={IMAGES.tech} className={`rounded-3xl shadow-2xl backdrop-blur-xl border translate-y-12 ${isDark ? 'border-gray-700' : 'border-white/60'} h-48 group`}>
+              <div className="bg-white/20 backdrop-blur-md p-3 rounded-full mb-2 group-hover:scale-110 transition-transform duration-300 border border-white/30">
+                <DollarSign className="w-6 h-6 text-white" />
               </div>
-              <span className="font-bold text-lg">Market Rates</span>
+              <span className="font-bold text-lg text-white drop-shadow-md">Market Rates</span>
             </TiltCard>
           </div>
         </div>
@@ -263,7 +277,7 @@ const LandingPage = ({ onLaunch, isDark, setIsDark }) => {
           <div className="text-center mb-20">
             <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-teal-500">Everything you need to grow</h2>
             <p className={`text-xl max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              Our platform combines cutting-edge technology with local agricultural knowledge to help you maximize your harvest.
+              Combining cutting-edge technology with the wisdom of the fields.
             </p>
           </div>
 
@@ -280,28 +294,28 @@ const LandingPage = ({ onLaunch, isDark, setIsDark }) => {
         </div>
       </section>
 
-      {/* Impact Stats - Animated Counters */}
-      <section className="py-24 bg-gradient-to-r from-emerald-900 via-green-900 to-teal-900 text-white relative overflow-hidden">
-        {/* Animated Background patterns */}
-        <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] animate-pulse"></div>
-        </div>
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-green-500 rounded-full blur-[100px] opacity-30"></div>
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-teal-400 rounded-full blur-[100px] opacity-30"></div>
+      {/* Impact Stats - Parallax Background */}
+      <section className="relative py-32 text-white overflow-hidden">
+        {/* Parallax Image Background */}
+        <div 
+          className="absolute inset-0 bg-fixed bg-center bg-cover"
+          style={{ backgroundImage: `url(${IMAGES.landscape})` }}
+        ></div>
+        <div className="absolute inset-0 bg-green-900/80 backdrop-blur-sm"></div>
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid md:grid-cols-3 gap-12 text-center divide-y md:divide-y-0 md:divide-x divide-green-800/50">
+          <div className="grid md:grid-cols-3 gap-12 text-center divide-y md:divide-y-0 md:divide-x divide-green-400/30">
             {[
               { val: 10000, label: "Active Farmers", icon: Globe },
               { val: 50, label: "Districts Covered", icon: CloudRain },
               { val: 1000000, label: "Scans Performed", icon: Camera }
             ].map((stat, i) => (
               <div key={i} className="pt-8 md:pt-0 hover:transform hover:scale-105 transition-transform duration-300">
-                <stat.icon className="w-10 h-10 mx-auto mb-4 text-green-300 opacity-80" />
-                <div className="text-5xl font-extrabold mb-2 bg-clip-text text-transparent bg-gradient-to-b from-white to-green-200">
+                <stat.icon className="w-10 h-10 mx-auto mb-4 text-green-300 opacity-90" />
+                <div className="text-5xl font-extrabold mb-2 text-white drop-shadow-lg">
                    <CountUp end={stat.val} />
                 </div>
-                <div className="text-green-200 font-medium text-lg tracking-wide uppercase">{stat.label}</div>
+                <div className="text-green-100 font-medium text-lg tracking-wide uppercase">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -328,7 +342,6 @@ const LandingPage = ({ onLaunch, isDark, setIsDark }) => {
   );
 };
 
-// Extracted Feature Card to handle hover state cleanly
 const FeatureCard = ({ feature, isDark, index }) => {
   return (
     <div 
@@ -338,12 +351,10 @@ const FeatureCard = ({ feature, isDark, index }) => {
         : 'bg-white hover:shadow-2xl hover:shadow-green-100 border border-gray-100 shadow-sm'}`}
     >
       <div className={`absolute inset-0 bg-gradient-to-br ${feature.from} ${feature.to} opacity-0 group-hover:opacity-5 rounded-3xl transition-opacity duration-500`}></div>
-      
       <div className={`relative w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-500 group-hover:rotate-6
         ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
         <feature.icon className={`w-8 h-8 ${feature.color}`} />
       </div>
-      
       <h3 className="text-xl font-bold mb-3 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
         {feature.title}
       </h3>
