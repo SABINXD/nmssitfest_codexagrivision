@@ -1,6 +1,6 @@
 
 
-const GEMINI_API_KEY = "AIzaSyAbD6dgsNgjbKIpYXWNM49oQ6nPWgmdIN4"; 
+const GEMINI_API_KEY = "AIzaSyBcqcdN95o4ZjrX2nUrxcIggsof5pWw7AE"; 
 export const callGeminiAPI = async (payload, endpoint = "generateContent", retries = 3) => {
   const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models";
   let model = "gemini-2.5-flash-preview-09-2025";
