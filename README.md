@@ -125,6 +125,6 @@ Government API Integration: Real-time connection to the Ministry of Agriculture'
 This project was built for the NMSS IT Fest Hackathon.
 Team Members:
 
-[Your Name] - Full Stack Developer
+Aakashan Subedi - Full Stack Developer
 
 Made with ❤️ in Nepal. 🇳🇵
