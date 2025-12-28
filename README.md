@@ -30,33 +30,14 @@ We believe in a **Mobile-First** approach for farmers. Here is how AgriHealth lo
 
 | **Smart Dashboard** | **Voice Assistant & Planner** |
 |:-------------------:|:-----------------------------:|
-| <img src="" width="300" /> | <img src="image.png" width="300" /> |
+| <img src="stats.png" width="300" /> | <img src="image.png" width="300" /> |
 | *Live weather & Kalimati market rates.* | *Speak in Nepali & plan the season.* |
 
 ---
 
 ## 🏗️ System Workflow
+| <img src="systemarch.png" width="300" /> | 
 
 How the data flows from the Farmer's phone to our AI Engine and Database.
 
-```mermaid
-graph TD
-    User([👤 Farmer]) --> |Opens App| Landing[🌐 App Interface]
-    
-    subgraph "Frontend Layer"
-        Landing --> |Log In| Auth[🔥 Firebase Auth]
-        Auth --> |Authenticated| Dashboard[📱 Dashboard]
-    end
 
-    subgraph "AI Core (Google Gemini)"
-        Dashboard --> |Upload Image| Vision[👁️ Gemini Vision]
-        Dashboard --> |Voice Input| Chat[🧠 Gemini Flash]
-        Chat --> |Text Response| TTS[🔊 Gemini TTS]
-    end
-
-    subgraph "Data Layer"
-        Vision --> |Save Result| DB[(☁️ Firestore)]
-        Chat --> |Save Plan| DB
-    end
-    
-    DB --> |Sync Tasks| Dashboard
