@@ -6,7 +6,7 @@ import {
   Wind, DollarSign, ArrowUpRight, ArrowDownRight, 
   Bot, Send, Volume2, Leaf, ChevronRight, ShieldCheck, 
   Smartphone, Zap, Globe, Plus, Trash2, LogOut, 
-  User as UserIcon, Lock, Mic, MicOff, CloudRain, Users
+  User as UserIcon, Lock, Mic, MicOff, CloudRain, Users, Play
 } from 'lucide-react';
 
 // --- FIREBASE IMPORTS ---
@@ -21,15 +21,15 @@ import {
 } from 'firebase/firestore';
 
 // --- CONFIGURATION ---
-const GEMINI_API_KEY = "";// <-- INSERT YOUR GOOGLE GEMINI API KEY HERE
-// Firebase configuration
+const GEMINI_API_KEY = "AIzaSyCG0MxlPkLaQHsYkt6gok6OGKYILMzbi_g";
+
 const firebaseConfig = {
-  apiKey: "",// <-- INSERT YOUR FIREBASE API KEY HERE
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: ""
+  apiKey: "AIzaSyBt7K_FMcN-vEZ-GWh36FaWcaEr-4cYN0Q",
+  authDomain: "agri-vision-app-75d60.firebaseapp.com",
+  projectId: "agri-vision-app-75d60",
+  storageBucket: "agri-vision-app-75d60.firebasestorage.app",
+  messagingSenderId: "92636573514",
+  appId: "1:92636573514:web:d6974274d90dd6a138dbb3"
 };
 
 const appId = "agri-health-hackathon-v1"; 
@@ -233,10 +233,10 @@ const LandingPage = ({ onLaunch, isDark, setIsDark }) => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  const scrollToAbout = () => {
-    const aboutSection = document.getElementById('about');
-    if (aboutSection) {
-      aboutSection.scrollIntoView({ behavior: 'smooth' });
+  const scrollToSection = (id) => {
+    const section = document.getElementById(id);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -295,7 +295,13 @@ const LandingPage = ({ onLaunch, isDark, setIsDark }) => {
           
           <div className="flex items-center space-x-6">
             <button 
-              onClick={scrollToAbout}
+              onClick={() => scrollToSection('tutorial')}
+              className={`hidden md:block font-medium transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-green-600'}`}
+            >
+              Tutorial
+            </button>
+            <button 
+              onClick={() => scrollToSection('about')}
               className={`hidden md:block font-medium transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-green-600'}`}
             >
               About Us
@@ -461,6 +467,50 @@ const LandingPage = ({ onLaunch, isDark, setIsDark }) => {
         </div>
       </section>
 
+      {/* --- VIDEO TUTORIAL SECTION (New) --- */}
+      <section id="tutorial" className={`py-20 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+        <div className="max-w-5xl mx-auto px-6 text-center">
+          <div className="inline-flex items-center justify-center p-3 mb-6 bg-blue-100 rounded-full dark:bg-blue-900/30">
+            <Play className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
+          <p className={`text-lg mb-12 max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            Watch our step-by-step guide on how to use AgriHealth Monitor to check your crop health and plan your season.
+          </p>
+          
+          <div className="relative w-full aspect-video rounded-3xl overflow-hidden shadow-2xl border-4 border-gray-100 dark:border-gray-800 bg-black">
+            <iframe 
+              className="absolute top-0 left-0 w-full h-full"
+              src="https://www.youtube.com/embed/0xR2fdzwYzc?rel=0&modestbranding=1" 
+              title="AgriHealth App Tutorial" 
+              frameBorder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+              allowFullScreen
+            ></iframe>
+          </div>
+          
+          <div className="mt-8 flex flex-col items-center gap-4">
+            <div className={`p-4 rounded-xl inline-block ${isDark ? 'bg-gray-800 text-gray-300' : 'bg-blue-50 text-blue-800'}`}>
+              <p className="text-sm font-medium">🎥 Video Guide: A step by step guide for smart crop monitoring web app designed for farmers. 👨‍🌾</p>
+            </div>
+            
+            <a 
+              href="https://www.youtube.com/watch?v=0xR2fdzwYzc" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className={`text-sm font-bold flex items-center gap-2 px-6 py-3 rounded-full transition-colors ${
+                isDark 
+                  ? 'bg-red-600/20 text-red-400 hover:bg-red-600/30' 
+                  : 'bg-red-50 text-red-600 hover:bg-red-100'
+              }`}
+            >
+              <Play className="w-4 h-4 fill-current" /> 
+              Watch directly on YouTube (if playback fails)
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className={`py-12 px-6 border-t relative z-10 ${isDark ? 'bg-gray-950 border-gray-900' : 'bg-white border-gray-100'}`}>
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
@@ -481,6 +531,7 @@ const LandingPage = ({ onLaunch, isDark, setIsDark }) => {
   );
 };
 
+// --- AUTH TAB ---
 const AuthTab = ({ user, isDark }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -575,6 +626,7 @@ const AuthTab = ({ user, isDark }) => {
   );
 };
 
+// --- SCAN TAB ---
 const ScanTab = ({ isDark, onAddTask, onSaveHistory, setActiveTab, user, setApiError }) => {
   const [image, setImage] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -1244,53 +1296,6 @@ const AssistantTab = ({ isDark, setApiError }) => {
   );
 };
 
-// --- DONATE TAB ---
-const DonateTab = ({ isDark }) => {
-  return (
-    <div className={`max-w-2xl mx-auto rounded-xl shadow-lg p-8 text-center ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-      <div className="flex justify-center mb-6">
-        <div className="bg-green-100 p-4 rounded-full animate-pulse">
-          <Heart className="w-12 h-12 text-green-600 fill-current" />
-        </div>
-      </div>
-      <h2 className="text-2xl font-bold mb-2">Support Our Farmers</h2>
-      <p className={`mb-8 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-        Your contribution helps us provide free AI tools to farmers across Nepal.
-      </p>
-
-      <div className={`border-4 border-dashed rounded-xl p-8 mb-6 inline-block transform hover:scale-105 transition duration-300 ${isDark ? 'border-gray-600 bg-gray-700' : 'border-green-200 bg-green-50'}`}>
-        <div className="bg-white p-2 rounded-lg inline-block mb-3">
-           <img
-             src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://esewa.com.np" 
-             alt="eSewa QR Code"
-             className="w-48 h-48 mx-auto"
-           />
-        </div>
-        <a 
-          href="https://esewa.com.np" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="mt-2 font-bold text-green-600 flex items-center justify-center hover:underline"
-        >
-          Open eSewa <ArrowUpRight className="w-4 h-4 ml-1"/>
-        </a>
-      </div>
-
-      <div className={`p-4 rounded-lg text-left max-w-sm mx-auto ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-        <p className="text-sm opacity-70 mb-2 uppercase tracking-wider font-bold">Manual Transfer Details</p>
-        <div className="flex justify-between items-center mb-1">
-          <span className="opacity-80">eSewa ID:</span>
-          <span className="font-mono font-bold select-all">9857030228</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="opacity-80">Name:</span>
-          <span className="font-bold">Green Nepal Fund</span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // --- MAIN APP CONTROLLER ---
 const App = () => {
   const [view, setView] = useState('landing'); // 'landing' or 'app'
@@ -1464,7 +1469,7 @@ const PlantHealthApp = ({ isDark, setIsDark, user, auth, db }) => {
             { id: 'tasks', icon: Calendar, label: 'Tasks' },
             { id: 'assistant', icon: MessageSquare, label: 'Chat' },
             { id: 'donate', icon: Heart, label: 'Donate' },
-            { id: 'auth', icon: UserIcon, label: user ? 'Profile' : 'Login' }, 
+            { id: 'auth', icon: UserIcon, label: user ? 'Profile' : 'Login' }, // Added Auth Tab
           ].map(tab => (
             <button
               key={tab.id}
