@@ -6,7 +6,7 @@ import {
   Wind, DollarSign, ArrowUpRight, ArrowDownRight, 
   Bot, Send, Volume2, Leaf, ChevronRight, ShieldCheck, 
   Smartphone, Zap, Globe, Plus, Trash2, LogOut, 
-  User as UserIcon, Lock, Mic, MicOff, CloudRain, Users, Play
+  User as UserIcon, Lock, Mic, MicOff, CloudRain, Users, Play, X
 } from 'lucide-react';
 
 // --- FIREBASE IMPORTS ---
@@ -21,15 +21,10 @@ import {
 } from 'firebase/firestore';
 
 // --- CONFIGURATION ---
-const GEMINI_API_KEY = "AIzaSyCG0MxlPkLaQHsYkt6gok6OGKYILMzbi_g";
+const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"; // Replace with your Gemini API Key
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBt7K_FMcN-vEZ-GWh36FaWcaEr-4cYN0Q",
-  authDomain: "agri-vision-app-75d60.firebaseapp.com",
-  projectId: "agri-vision-app-75d60",
-  storageBucket: "agri-vision-app-75d60.firebasestorage.app",
-  messagingSenderId: "92636573514",
-  appId: "1:92636573514:web:d6974274d90dd6a138dbb3"
+// Your Firebase configuration here
 };
 
 const appId = "agri-health-hackathon-v1"; 
@@ -211,327 +206,8 @@ const FeatureCard = ({ feature, isDark, index }) => {
   );
 };
 
-// --- LANDING PAGE COMPONENT ---
-const LandingPage = ({ onLaunch, isDark, setIsDark }) => {
-  const [scrolled, setScrolled] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+// --- SUB COMPONENTS (Auth, Scan, Dashboard, etc.) ---
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      setMousePos({ 
-        x: (e.clientX / window.innerWidth) * 20, 
-        y: (e.clientY / window.innerHeight) * 20 
-      });
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
-  const scrollToSection = (id) => {
-    const section = document.getElementById(id);
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  const styles = `
-    @keyframes float { 0% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-20px) rotate(5deg); } 100% { transform: translateY(0px) rotate(0deg); } }
-    @keyframes gradient-x { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-    @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
-    @keyframes typewriter { from { width: 0; } to { width: 100%; } }
-    @keyframes blink { 50% { border-color: transparent; } }
-    
-    .animate-float { animation: float 6s ease-in-out infinite; }
-    .animate-gradient-x { background-size: 200% 200%; animation: gradient-x 15s ease infinite; }
-    .animate-blob { animation: blob 7s infinite; }
-    .typing-cursor { overflow: hidden; white-space: nowrap; border-right: 4px solid #10B981; animation: typewriter 3s steps(40) 1s 1 normal both, blink 0.75s step-end infinite; }
-  `;
-
-  return (
-    <div className={`min-h-screen transition-colors duration-700 overflow-x-hidden ${isDark ? 'bg-gray-900 text-white' : 'bg-slate-50 text-gray-900'}`}>
-      <style>{styles}</style>
-      
-      {/* Dynamic Background Particles */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {[...Array(6)].map((_, i) => (
-          <div 
-            key={i}
-            className={`absolute opacity-10 ${isDark ? 'text-green-800' : 'text-green-300'} animate-float`}
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animationDelay: `${i * 1.5}s`,
-              transform: `translate(${mousePos.x * -1}px, ${mousePos.y * -1}px)`
-            }}
-          >
-            {i % 2 === 0 ? <Leaf size={40 + Math.random() * 40} /> : <Sprout size={40 + Math.random() * 40} />}
-          </div>
-        ))}
-        <div 
-          className={`absolute top-0 left-0 w-full h-full opacity-30 filter blur-[100px] animate-gradient-x
-          ${isDark 
-            ? 'bg-gradient-to-r from-gray-900 via-green-900 to-emerald-900' 
-            : 'bg-gradient-to-r from-green-100 via-emerald-100 to-teal-100'}`} 
-        />
-      </div>
-
-      {/* Navbar */}
-      <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? (isDark ? 'bg-gray-900/90 border-b border-gray-800 backdrop-blur-md py-3' : 'bg-white/80 border-b border-green-100 backdrop-blur-md py-3') : 'bg-transparent py-5'}`}>
-        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          <div className="flex items-center space-x-2 group cursor-pointer">
-            <div className="bg-gradient-to-tr from-green-500 to-emerald-600 p-2 rounded-xl shadow-lg group-hover:rotate-12 transition-transform duration-300">
-              <Leaf className="w-6 h-6 text-white" />
-            </div>
-            <span className={`text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r ${isDark ? 'from-white to-gray-400' : 'from-gray-900 to-green-800'}`}>
-              AgriHealth
-            </span>
-          </div>
-          
-          <div className="flex items-center space-x-6">
-            <button 
-              onClick={() => scrollToSection('tutorial')}
-              className={`hidden md:block font-medium transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-green-600'}`}
-            >
-              Tutorial
-            </button>
-            <button 
-              onClick={() => scrollToSection('about')}
-              className={`hidden md:block font-medium transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-green-600'}`}
-            >
-              About Us
-            </button>
-            <button 
-              onClick={() => setIsDark(!isDark)}
-              className={`p-2.5 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95 ${isDark ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700 ring-2 ring-gray-700' : 'bg-white text-orange-400 hover:bg-orange-50 shadow-md ring-1 ring-orange-100'}`}
-            >
-              {isDark ? <Sun className="w-5 h-5 animate-spin-slow" /> : <Moon className="w-5 h-5" />}
-            </button>
-            <button 
-              onClick={onLaunch}
-              className="relative overflow-hidden group bg-gradient-to-r from-green-600 to-emerald-600 text-white px-7 py-2.5 rounded-full font-semibold shadow-lg shadow-green-500/30 transition-all hover:shadow-green-500/50 hover:-translate-y-0.5"
-            >
-              <span className="relative z-10 flex items-center">
-                Launch App <Zap className="w-4 h-4 ml-2 group-hover:text-yellow-300 transition-colors" />
-              </span>
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <main className="relative pt-36 pb-24 px-6 max-w-7xl mx-auto flex flex-col md:flex-row items-center z-10">
-        <div className="md:w-1/2 mb-16 md:mb-0">
-          <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium mb-8 transform hover:scale-105 transition-transform cursor-default ${isDark ? 'bg-green-900/30 text-green-400 border border-green-800' : 'bg-white shadow-md text-green-700 border border-green-100'}`}>
-            <span className="relative flex h-3 w-3 mr-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-            </span>
-            Empowering Nepal's Agriculture 🇳🇵
-          </div>
-          
-          <h1 className="text-5xl md:text-7xl font-extrabold leading-tight mb-6 tracking-tight">
-            Cultivating the <br/>
-            <span className="inline-block typing-cursor text-transparent bg-clip-text bg-gradient-to-r from-green-500 via-emerald-400 to-teal-500 pb-2">
-              Future
-            </span> <br/>
-            of Farming
-          </h1>
-          
-          <p className={`text-xl mb-10 leading-relaxed max-w-lg transition-opacity duration-500 delay-500 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            AI-driven crop diagnosis and expert assistance, now with real-time visual monitoring for every season.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4">
-            <button 
-              onClick={onLaunch}
-              className="group flex items-center justify-center bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-8 py-4 rounded-full font-bold text-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0"
-            >
-              Get Started Free 
-              <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
-        </div>
-
-        {/* Hero Visual - Interactive PHOTO Tilt Cards */}
-        <div className="md:w-1/2 relative perspective-1000">
-          <div className={`absolute top-10 right-10 w-80 h-80 bg-green-400 rounded-full mix-blend-multiply filter blur-[80px] opacity-40 animate-blob ${isDark ? 'mix-blend-overlay opacity-20' : ''}`}></div>
-          <div className={`absolute bottom-10 left-10 w-80 h-80 bg-teal-400 rounded-full mix-blend-multiply filter blur-[80px] opacity-40 animate-blob animation-delay-2000 ${isDark ? 'mix-blend-overlay opacity-20' : ''}`}></div>
-          
-          <div className="relative z-10 grid grid-cols-2 gap-5 transform rotate-3 hover:rotate-0 transition duration-700 ease-out p-4">
-            
-            <TiltCard bgImage={IMAGES.crop} className={`rounded-3xl shadow-2xl backdrop-blur-xl border ${isDark ? 'border-gray-700' : 'border-white/60'} h-48 group`}>
-              <div className="bg-white/20 backdrop-blur-md p-3 rounded-full mb-2 group-hover:scale-110 transition-transform duration-300 border border-white/30">
-                <Camera className="w-6 h-6 text-white" />
-              </div>
-              <span className="font-bold text-lg text-white drop-shadow-md">AI Diagnosis</span>
-            </TiltCard>
-            
-            <TiltCard bgImage={IMAGES.landscape} className={`rounded-3xl shadow-2xl backdrop-blur-xl border translate-y-12 ${isDark ? 'border-gray-700' : 'border-white/60'} h-48 group`}>
-              <div className="bg-white/20 backdrop-blur-md p-3 rounded-full mb-2 group-hover:scale-110 transition-transform duration-300 border border-white/30">
-                <Sprout className="w-6 h-6 text-white" />
-              </div>
-              <span className="font-bold text-lg text-white drop-shadow-md">Smart Calendar</span>
-            </TiltCard>
-            
-            <TiltCard bgImage={IMAGES.farmer} className={`rounded-3xl shadow-2xl backdrop-blur-xl border ${isDark ? 'border-gray-700' : 'border-white/60'} h-48 group`}>
-              <div className="bg-white/20 backdrop-blur-md p-3 rounded-full mb-2 group-hover:scale-110 transition-transform duration-300 border border-white/30">
-                <MessageSquare className="w-6 h-6 text-white" />
-              </div>
-              <span className="font-bold text-lg text-white drop-shadow-md">Expert Chat</span>
-            </TiltCard>
-            
-            <TiltCard bgImage={IMAGES.tech} className={`rounded-3xl shadow-2xl backdrop-blur-xl border translate-y-12 ${isDark ? 'border-gray-700' : 'border-white/60'} h-48 group`}>
-              <div className="bg-white/20 backdrop-blur-md p-3 rounded-full mb-2 group-hover:scale-110 transition-transform duration-300 border border-white/30">
-                <DollarSign className="w-6 h-6 text-white" />
-              </div>
-              <span className="font-bold text-lg text-white drop-shadow-md">Market Rates</span>
-            </TiltCard>
-          </div>
-        </div>
-      </main>
-
-      {/* Features Grid */}
-      <section className={`py-24 relative ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-teal-500">Everything you need to grow</h2>
-            <p className={`text-xl max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              Combining cutting-edge technology with the wisdom of the fields.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { icon: ShieldCheck, title: "Precision Detection", desc: "Detect diseases with 95% accuracy using our advanced Gemini AI vision models.", color: "text-green-600", from: "from-green-500", to: "to-emerald-500" },
-              { icon: Calendar, title: "Seasonal Planning", desc: "Get customized schedules for planting, fertilizing, and harvesting based on your location.", color: "text-indigo-600", from: "from-indigo-500", to: "to-purple-500" },
-              { icon: Smartphone, title: "Mobile First", desc: "Designed for the field. Works perfectly on all mobile devices with an intuitive interface.", color: "text-blue-600", from: "from-blue-500", to: "to-cyan-500" },
-              { icon: Zap, title: "Real-time Insights", desc: "Stay updated with live weather forecasts and current market prices across Nepal.", color: "text-orange-600", from: "from-orange-500", to: "to-red-500" },
-            ].map((feature, idx) => (
-              <FeatureCard key={idx} feature={feature} isDark={isDark} index={idx} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Impact Stats - Parallax Background */}
-      <section className="relative py-32 text-white overflow-hidden">
-        <div 
-          className="absolute inset-0 bg-fixed bg-center bg-cover"
-          style={{ backgroundImage: `url(${IMAGES.landscape})` }}
-        ></div>
-        <div className="absolute inset-0 bg-green-900/80 backdrop-blur-sm"></div>
-
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid md:grid-cols-3 gap-12 text-center divide-y md:divide-y-0 md:divide-x divide-green-400/30">
-            {[
-              { val: 10000, label: "Active Farmers", icon: Globe },
-              { val: 50, label: "Districts Covered", icon: CloudRain },
-              { val: 1000000, label: "Scans Performed", icon: Camera }
-            ].map((stat, i) => (
-              <div key={i} className="pt-8 md:pt-0 hover:transform hover:scale-105 transition-transform duration-300">
-                <stat.icon className="w-10 h-10 mx-auto mb-4 text-green-300 opacity-90" />
-                <div className="text-5xl font-extrabold mb-2 text-white drop-shadow-lg">
-                   <CountUp end={stat.val} />
-                </div>
-                <div className="text-green-100 font-medium text-lg tracking-wide uppercase">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* --- ABOUT US SECTION (New) --- */}
-      <section id="about" className={`py-24 ${isDark ? 'bg-gray-800' : 'bg-green-50'}`}>
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center justify-center p-3 mb-6 bg-green-100 rounded-full dark:bg-green-900/30">
-            <Users className="w-8 h-8 text-green-600 dark:text-green-400" />
-          </div>
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">Who We Are</h2>
-          <p className={`text-lg md:text-xl leading-relaxed mb-8 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-            We are a team of student developers participating in the <strong>NMSS IT Fest Hackathon</strong>. 
-            Our goal is to revolutionize traditional farming in Nepal by leveraging the power of Artificial Intelligence. 
-            We believe that by providing farmers with instant disease diagnosis and smart planning tools, we can ensure better harvests and sustainable livelihoods.
-          </p>
-          <div className="flex justify-center gap-4">
-            <span className={`px-4 py-2 rounded-full text-sm font-medium ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-white text-gray-600 shadow-sm'}`}>🚀 Innovation</span>
-            <span className={`px-4 py-2 rounded-full text-sm font-medium ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-white text-gray-600 shadow-sm'}`}>🌱 Sustainability</span>
-            <span className={`px-4 py-2 rounded-full text-sm font-medium ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-white text-gray-600 shadow-sm'}`}>🤝 Community</span>
-          </div>
-        </div>
-      </section>
-
-      {/* --- VIDEO TUTORIAL SECTION (New) --- */}
-      <section id="tutorial" className={`py-20 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-        <div className="max-w-5xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center justify-center p-3 mb-6 bg-blue-100 rounded-full dark:bg-blue-900/30">
-            <Play className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-          </div>
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
-          <p className={`text-lg mb-12 max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            Watch our step-by-step guide on how to use AgriHealth Monitor to check your crop health and plan your season.
-          </p>
-          
-          <div className="relative w-full aspect-video rounded-3xl overflow-hidden shadow-2xl border-4 border-gray-100 dark:border-gray-800 bg-black">
-            <iframe 
-              className="absolute top-0 left-0 w-full h-full"
-              src="https://www.youtube.com/embed/0xR2fdzwYzc?rel=0&modestbranding=1" 
-              title="AgriHealth App Tutorial" 
-              frameBorder="0" 
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-              allowFullScreen
-            ></iframe>
-          </div>
-          
-          <div className="mt-8 flex flex-col items-center gap-4">
-            <div className={`p-4 rounded-xl inline-block ${isDark ? 'bg-gray-800 text-gray-300' : 'bg-blue-50 text-blue-800'}`}>
-              <p className="text-sm font-medium">🎥 Video Guide: A step by step guide for smart crop monitoring web app designed for farmers. 👨‍🌾</p>
-            </div>
-            
-            <a 
-              href="https://www.youtube.com/watch?v=0xR2fdzwYzc" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className={`text-sm font-bold flex items-center gap-2 px-6 py-3 rounded-full transition-colors ${
-                isDark 
-                  ? 'bg-red-600/20 text-red-400 hover:bg-red-600/30' 
-                  : 'bg-red-50 text-red-600 hover:bg-red-100'
-              }`}
-            >
-              <Play className="w-4 h-4 fill-current" /> 
-              Watch directly on YouTube (if playback fails)
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className={`py-12 px-6 border-t relative z-10 ${isDark ? 'bg-gray-950 border-gray-900' : 'bg-white border-gray-100'}`}>
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
-          <div className="flex items-center space-x-3 mb-4 md:mb-0">
-            <div className="bg-gradient-to-tr from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-700 p-2 rounded-lg">
-              <Leaf className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-            </div>
-            <span className="font-bold text-xl text-gray-700 dark:text-gray-300">AgriHealth Monitor</span>
-          </div>
-          <div className={`text-sm flex flex-col md:flex-row items-center gap-4 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-            <span>© 2024 Agri Nepal Initiative.</span>
-            <span className="hidden md:inline">•</span>
-            <span>Built with ❤️ for the Hackathon</span>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
-};
-
-// --- AUTH TAB ---
 const AuthTab = ({ user, isDark }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -626,12 +302,18 @@ const AuthTab = ({ user, isDark }) => {
   );
 };
 
-// --- SCAN TAB ---
 const ScanTab = ({ isDark, onAddTask, onSaveHistory, setActiveTab, user, setApiError }) => {
   const [image, setImage] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
   const fileInputRef = useRef(null);
+
+  const resetScan = () => {
+    setImage(null);
+    setAnalysis(null);
+    if (setApiError) setApiError(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const saveToHistory = async (result) => {
     if (!user) return alert("Please login to save history!");
@@ -663,7 +345,7 @@ const ScanTab = ({ isDark, onAddTask, onSaveHistory, setActiveTab, user, setApiE
   const analyzeImage = async (imageDataUrl) => {
     setAnalyzing(true);
     setAnalysis(null);
-    setApiError(null);
+    if (setApiError) setApiError(null);
 
     try {
       const base64Data = imageDataUrl.split(',')[1];
@@ -716,7 +398,7 @@ const ScanTab = ({ isDark, onAddTask, onSaveHistory, setActiveTab, user, setApiE
       let errorMessage = 'Could not connect to AI service.';
       if (error.message.includes('429')) errorMessage = 'API Quota Exceeded (429). Please try again in a few minutes.';
       else if (error.message.includes('403')) errorMessage = 'Invalid API Key (403). Please check your configuration.';
-      setApiError(errorMessage);
+      if (setApiError) setApiError(errorMessage);
       setAnalysis({
         status: 'Error',
         confidence: 0,
@@ -758,7 +440,16 @@ const ScanTab = ({ isDark, onAddTask, onSaveHistory, setActiveTab, user, setApiE
               <p className={`text-sm mt-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>JPG, PNG up to 10MB</p>
             </div>
           ) : (
-            <img src={image} alt="Plant" className="max-h-64 mx-auto rounded-lg object-contain shadow-md" />
+            <div className="relative w-full h-full">
+               <img src={image} alt="Plant" className="max-h-64 mx-auto rounded-lg object-contain shadow-md" />
+               <button 
+                  onClick={(e) => { e.stopPropagation(); resetScan(); }}
+                  className="absolute top-2 right-2 bg-gray-900/50 hover:bg-gray-900 text-white p-1 rounded-full backdrop-blur-sm transition-colors"
+                  title="Remove Image"
+               >
+                 <X className="w-4 h-4"/>
+               </button>
+            </div>
           )}
           
           {analyzing && (
@@ -846,12 +537,20 @@ const ScanTab = ({ isDark, onAddTask, onSaveHistory, setActiveTab, user, setApiE
               </div>
             )}
 
-            <button 
-              onClick={() => saveToHistory(analysis)}
-              className="w-full mt-4 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-lg flex items-center justify-center transition hover:shadow-lg"
-            >
-              <Save className="w-5 h-5 mr-2" /> Save Result
-            </button>
+            <div className="flex gap-3 mt-4">
+               <button 
+                 onClick={() => saveToHistory(analysis)}
+                 className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg flex items-center justify-center transition hover:shadow-lg"
+               >
+                 <Save className="w-5 h-5 mr-2" /> Save
+               </button>
+               <button 
+                 onClick={resetScan}
+                 className={`flex-1 border py-3 rounded-lg flex items-center justify-center transition ${isDark ? 'border-gray-600 hover:bg-gray-700 text-white' : 'border-gray-200 hover:bg-gray-50 text-gray-700'}`}
+               >
+                 <Plus className="w-5 h-5 mr-2" /> New Scan
+               </button>
+            </div>
           </div>
         )}
       </div>
@@ -1296,6 +995,304 @@ const AssistantTab = ({ isDark, setApiError }) => {
   );
 };
 
+// --- DONATE TAB ---
+const DonateTab = ({ isDark }) => {
+  return (
+    <div className={`max-w-2xl mx-auto rounded-xl shadow-lg p-8 text-center ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
+      <div className="flex justify-center mb-6">
+        <div className="bg-green-100 p-4 rounded-full animate-pulse">
+          <Heart className="w-12 h-12 text-green-600 fill-current" />
+        </div>
+      </div>
+      <h2 className="text-2xl font-bold mb-2">Support Our Farmers</h2>
+      <p className={`mb-8 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+        Your contribution helps us provide free AI tools to farmers across Nepal.
+      </p>
+
+      <div className={`border-4 border-dashed rounded-xl p-8 mb-6 inline-block transform hover:scale-105 transition duration-300 ${isDark ? 'border-gray-600 bg-gray-700' : 'border-green-200 bg-green-50'}`}>
+        <div className="bg-white p-2 rounded-lg inline-block mb-3">
+           <img
+             src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://esewa.com.np" 
+             alt="eSewa QR Code"
+             className="w-48 h-48 mx-auto"
+           />
+        </div>
+        <a 
+          href="https://esewa.com.np" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="mt-2 font-bold text-green-600 flex items-center justify-center hover:underline"
+        >
+          Open eSewa <ArrowUpRight className="w-4 h-4 ml-1"/>
+        </a>
+      </div>
+
+      <div className={`p-4 rounded-lg text-left max-w-sm mx-auto ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+        <p className="text-sm opacity-70 mb-2 uppercase tracking-wider font-bold">Manual Transfer Details</p>
+        <div className="flex justify-between items-center mb-1">
+          <span className="opacity-80">eSewa ID:</span>
+          <span className="font-mono font-bold select-all">9857030228</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="opacity-80">Name:</span>
+          <span className="font-bold">Green Nepal Fund</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- LANDING PAGE ---
+const LandingPage = ({ onLaunch, isDark, setIsDark }) => {
+  const [scrolled, setScrolled] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setMousePos({ 
+        x: (e.clientX / window.innerWidth) * 20, 
+        y: (e.clientY / window.innerHeight) * 20 
+      });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  const scrollToSection = (id) => {
+    const section = document.getElementById(id);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const styles = `
+    @keyframes float { 0% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-20px) rotate(5deg); } 100% { transform: translateY(0px) rotate(0deg); } }
+    @keyframes gradient-x { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
+    @keyframes typewriter { from { width: 0; } to { width: 100%; } }
+    @keyframes blink { 50% { border-color: transparent; } }
+    
+    .animate-float { animation: float 6s ease-in-out infinite; }
+    .animate-gradient-x { background-size: 200% 200%; animation: gradient-x 15s ease infinite; }
+    .animate-blob { animation: blob 7s infinite; }
+    .typing-cursor { overflow: hidden; white-space: nowrap; border-right: 4px solid #10B981; animation: typewriter 3s steps(40) 1s 1 normal both, blink 0.75s step-end infinite; }
+  `;
+
+  return (
+    <div className={`min-h-screen transition-colors duration-700 overflow-x-hidden ${isDark ? 'bg-gray-900 text-white' : 'bg-slate-50 text-gray-900'}`}>
+      <style>{styles}</style>
+      
+      {/* Background */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {[...Array(6)].map((_, i) => (
+          <div 
+            key={i}
+            className={`absolute opacity-10 ${isDark ? 'text-green-800' : 'text-green-300'} animate-float`}
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${i * 1.5}s`,
+              transform: `translate(${mousePos.x * -1}px, ${mousePos.y * -1}px)`
+            }}
+          >
+            {i % 2 === 0 ? <Leaf size={40 + Math.random() * 40} /> : <Sprout size={40 + Math.random() * 40} />}
+          </div>
+        ))}
+        <div 
+          className={`absolute top-0 left-0 w-full h-full opacity-30 filter blur-[100px] animate-gradient-x
+          ${isDark 
+            ? 'bg-gradient-to-r from-gray-900 via-green-900 to-emerald-900' 
+            : 'bg-gradient-to-r from-green-100 via-emerald-100 to-teal-100'}`} 
+        />
+      </div>
+
+      {/* Navbar */}
+      <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? (isDark ? 'bg-gray-900/90 border-b border-gray-800 backdrop-blur-md py-3' : 'bg-white/80 border-b border-green-100 backdrop-blur-md py-3') : 'bg-transparent py-5'}`}>
+        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+          <div className="flex items-center space-x-2 group cursor-pointer">
+            <div className="bg-gradient-to-tr from-green-500 to-emerald-600 p-2 rounded-xl shadow-lg group-hover:rotate-12 transition-transform duration-300">
+              <Leaf className="w-6 h-6 text-white" />
+            </div>
+            <span className={`text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r ${isDark ? 'from-white to-gray-400' : 'from-gray-900 to-green-800'}`}>
+              AgriHealth
+            </span>
+          </div>
+          
+          <div className="flex items-center space-x-6">
+            <button onClick={() => scrollToSection('tutorial')} className={`hidden md:block font-medium transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-green-600'}`}>
+              Tutorial
+            </button>
+            <button onClick={() => scrollToSection('about')} className={`hidden md:block font-medium transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-green-600'}`}>
+              About Us
+            </button>
+            <button onClick={() => setIsDark(!isDark)} className={`p-2.5 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95 ${isDark ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700 ring-2 ring-gray-700' : 'bg-white text-orange-400 hover:bg-orange-50 shadow-md ring-1 ring-orange-100'}`}>
+              {isDark ? <Sun className="w-5 h-5 animate-spin-slow" /> : <Moon className="w-5 h-5" />}
+            </button>
+            <button onClick={onLaunch} className="relative overflow-hidden group bg-gradient-to-r from-green-600 to-emerald-600 text-white px-7 py-2.5 rounded-full font-semibold shadow-lg shadow-green-500/30 transition-all hover:shadow-green-500/50 hover:-translate-y-0.5">
+              <span className="relative z-10 flex items-center">
+                Launch App <Zap className="w-4 h-4 ml-2 group-hover:text-yellow-300 transition-colors" />
+              </span>
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <main className="relative pt-36 pb-24 px-6 max-w-7xl mx-auto flex flex-col md:flex-row items-center z-10">
+        <div className="md:w-1/2 mb-16 md:mb-0">
+          <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium mb-8 transform hover:scale-105 transition-transform cursor-default ${isDark ? 'bg-green-900/30 text-green-400 border border-green-800' : 'bg-white shadow-md text-green-700 border border-green-100'}`}>
+            <span className="relative flex h-3 w-3 mr-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+            Empowering Nepal's Agriculture 🇳🇵
+          </div>
+          <h1 className="text-5xl md:text-7xl font-extrabold leading-tight mb-6 tracking-tight">
+            Cultivating the <br/>
+            <span className="inline-block typing-cursor text-transparent bg-clip-text bg-gradient-to-r from-green-500 via-emerald-400 to-teal-500 pb-2">Future</span> <br/>
+            of Farming
+          </h1>
+          <p className={`text-xl mb-10 leading-relaxed max-w-lg transition-opacity duration-500 delay-500 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            AI-driven crop diagnosis and expert assistance, now with real-time visual monitoring for every season.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button onClick={onLaunch} className="group flex items-center justify-center bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-8 py-4 rounded-full font-bold text-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0">
+              Get Started Free 
+              <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
+        </div>
+
+        {/* Hero Visual */}
+        <div className="md:w-1/2 relative perspective-1000">
+          <div className={`absolute top-10 right-10 w-80 h-80 bg-green-400 rounded-full mix-blend-multiply filter blur-[80px] opacity-40 animate-blob ${isDark ? 'mix-blend-overlay opacity-20' : ''}`}></div>
+          <div className={`absolute bottom-10 left-10 w-80 h-80 bg-teal-400 rounded-full mix-blend-multiply filter blur-[80px] opacity-40 animate-blob animation-delay-2000 ${isDark ? 'mix-blend-overlay opacity-20' : ''}`}></div>
+          <div className="relative z-10 grid grid-cols-2 gap-5 transform rotate-3 hover:rotate-0 transition duration-700 ease-out p-4">
+            <TiltCard bgImage={IMAGES.crop} className={`rounded-3xl shadow-2xl backdrop-blur-xl border ${isDark ? 'border-gray-700' : 'border-white/60'} h-48 group`}>
+              <div className="bg-white/20 backdrop-blur-md p-3 rounded-full mb-2 group-hover:scale-110 transition-transform duration-300 border border-white/30"><Camera className="w-6 h-6 text-white" /></div>
+              <span className="font-bold text-lg text-white drop-shadow-md">AI Diagnosis</span>
+            </TiltCard>
+            <TiltCard bgImage={IMAGES.landscape} className={`rounded-3xl shadow-2xl backdrop-blur-xl border translate-y-12 ${isDark ? 'border-gray-700' : 'border-white/60'} h-48 group`}>
+              <div className="bg-white/20 backdrop-blur-md p-3 rounded-full mb-2 group-hover:scale-110 transition-transform duration-300 border border-white/30"><Sprout className="w-6 h-6 text-white" /></div>
+              <span className="font-bold text-lg text-white drop-shadow-md">Smart Calendar</span>
+            </TiltCard>
+            <TiltCard bgImage={IMAGES.farmer} className={`rounded-3xl shadow-2xl backdrop-blur-xl border ${isDark ? 'border-gray-700' : 'border-white/60'} h-48 group`}>
+              <div className="bg-white/20 backdrop-blur-md p-3 rounded-full mb-2 group-hover:scale-110 transition-transform duration-300 border border-white/30"><MessageSquare className="w-6 h-6 text-white" /></div>
+              <span className="font-bold text-lg text-white drop-shadow-md">Expert Chat</span>
+            </TiltCard>
+            <TiltCard bgImage={IMAGES.tech} className={`rounded-3xl shadow-2xl backdrop-blur-xl border translate-y-12 ${isDark ? 'border-gray-700' : 'border-white/60'} h-48 group`}>
+              <div className="bg-white/20 backdrop-blur-md p-3 rounded-full mb-2 group-hover:scale-110 transition-transform duration-300 border border-white/30"><DollarSign className="w-6 h-6 text-white" /></div>
+              <span className="font-bold text-lg text-white drop-shadow-md">Market Rates</span>
+            </TiltCard>
+          </div>
+        </div>
+      </main>
+
+      {/* Features Grid */}
+      <section className={`py-24 relative ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-teal-500">Everything you need to grow</h2>
+            <p className={`text-xl max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Combining cutting-edge technology with the wisdom of the fields.</p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              { icon: ShieldCheck, title: "Precision Detection", desc: "Detect diseases with 95% accuracy using our advanced Gemini AI vision models.", color: "text-green-600", from: "from-green-500", to: "to-emerald-500" },
+              { icon: Calendar, title: "Seasonal Planning", desc: "Get customized schedules for planting, fertilizing, and harvesting based on your location.", color: "text-indigo-600", from: "from-indigo-500", to: "to-purple-500" },
+              { icon: Smartphone, title: "Mobile First", desc: "Designed for the field. Works perfectly on all mobile devices with an intuitive interface.", color: "text-blue-600", from: "from-blue-500", to: "to-cyan-500" },
+              { icon: Zap, title: "Real-time Insights", desc: "Stay updated with live weather forecasts and current market prices across Nepal.", color: "text-orange-600", from: "from-orange-500", to: "to-red-500" },
+            ].map((feature, idx) => (
+              <FeatureCard key={idx} feature={feature} isDark={isDark} index={idx} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Impact Stats */}
+      <section className="relative py-32 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-fixed bg-center bg-cover" style={{ backgroundImage: `url(${IMAGES.landscape})` }}></div>
+        <div className="absolute inset-0 bg-green-900/80 backdrop-blur-sm"></div>
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="grid md:grid-cols-3 gap-12 text-center divide-y md:divide-y-0 md:divide-x divide-green-400/30">
+            {[
+              { val: 10000, label: "Active Farmers", icon: Globe },
+              { val: 50, label: "Districts Covered", icon: CloudRain },
+              { val: 1000000, label: "Scans Performed", icon: Camera }
+            ].map((stat, i) => (
+              <div key={i} className="pt-8 md:pt-0 hover:transform hover:scale-105 transition-transform duration-300">
+                <stat.icon className="w-10 h-10 mx-auto mb-4 text-green-300 opacity-90" />
+                <div className="text-5xl font-extrabold mb-2 text-white drop-shadow-lg"><CountUp end={stat.val} /></div>
+                <div className="text-green-100 font-medium text-lg tracking-wide uppercase">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* About Us */}
+      <section id="about" className={`py-24 ${isDark ? 'bg-gray-800' : 'bg-green-50'}`}>
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <div className="inline-flex items-center justify-center p-3 mb-6 bg-green-100 rounded-full dark:bg-green-900/30"><Users className="w-8 h-8 text-green-600 dark:text-green-400" /></div>
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">Who We Are</h2>
+          <p className={`text-lg md:text-xl leading-relaxed mb-8 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+            We are a team of student developers participating in the <strong>NMSS IT Fest Hackathon</strong>. Our goal is to revolutionize traditional farming in Nepal by leveraging the power of Artificial Intelligence.
+          </p>
+          <div className="flex justify-center gap-4">
+            <span className={`px-4 py-2 rounded-full text-sm font-medium ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-white text-gray-600 shadow-sm'}`}>🚀 Innovation</span>
+            <span className={`px-4 py-2 rounded-full text-sm font-medium ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-white text-gray-600 shadow-sm'}`}>🌱 Sustainability</span>
+            <span className={`px-4 py-2 rounded-full text-sm font-medium ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-white text-gray-600 shadow-sm'}`}>🤝 Community</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Video Tutorial */}
+      <section id="tutorial" className={`py-20 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+        <div className="max-w-5xl mx-auto px-6 text-center">
+          <div className="inline-flex items-center justify-center p-3 mb-6 bg-blue-100 rounded-full dark:bg-blue-900/30"><Play className="w-8 h-8 text-blue-600 dark:text-blue-400" /></div>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
+          <p className={`text-lg mb-12 max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Watch our step-by-step guide on how to use AgriHealth Monitor.</p>
+          <div className="relative w-full aspect-video rounded-3xl overflow-hidden shadow-2xl border-4 border-gray-100 dark:border-gray-800 bg-black">
+            <iframe 
+              className="absolute top-0 left-0 w-full h-full"
+              src="https://www.youtube.com/embed/0xR2fdzwYzc?rel=0&modestbranding=1" 
+              title="AgriHealth App Tutorial" 
+              frameBorder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+              allowFullScreen
+            ></iframe>
+          </div>
+          <div className="mt-8 flex flex-col items-center gap-4">
+             <a href="https://www.youtube.com/watch?v=0xR2fdzwYzc" target="_blank" rel="noopener noreferrer" className={`text-sm font-bold flex items-center gap-2 px-6 py-3 rounded-full transition-colors ${isDark ? 'bg-red-600/20 text-red-400 hover:bg-red-600/30' : 'bg-red-50 text-red-600 hover:bg-red-100'}`}>
+              <Play className="w-4 h-4 fill-current" /> Watch directly on YouTube (if playback fails)
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className={`py-12 px-6 border-t relative z-10 ${isDark ? 'bg-gray-950 border-gray-900' : 'bg-white border-gray-100'}`}>
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
+          <div className="flex items-center space-x-3 mb-4 md:mb-0">
+            <div className="bg-gradient-to-tr from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-700 p-2 rounded-lg"><Leaf className="w-5 h-5 text-gray-600 dark:text-gray-300" /></div>
+            <span className="font-bold text-xl text-gray-700 dark:text-gray-300">AgriHealth Monitor</span>
+          </div>
+          <div className={`text-sm flex flex-col md:flex-row items-center gap-4 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+            <span>© 2024 Agri Nepal Initiative.</span>
+            <span>Built with ❤️ for the Hackathon</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
 // --- MAIN APP CONTROLLER ---
 const App = () => {
   const [view, setView] = useState('landing'); // 'landing' or 'app'
@@ -1469,7 +1466,7 @@ const PlantHealthApp = ({ isDark, setIsDark, user, auth, db }) => {
             { id: 'tasks', icon: Calendar, label: 'Tasks' },
             { id: 'assistant', icon: MessageSquare, label: 'Chat' },
             { id: 'donate', icon: Heart, label: 'Donate' },
-            { id: 'auth', icon: UserIcon, label: user ? 'Profile' : 'Login' }, // Added Auth Tab
+            { id: 'auth', icon: UserIcon, label: user ? 'Profile' : 'Login' }, 
           ].map(tab => (
             <button
               key={tab.id}
