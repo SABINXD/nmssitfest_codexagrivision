@@ -1,84 +1,51 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Activity, 
-  Sun, 
-  Moon, 
-  Camera, 
-  TrendingUp, 
-  Calendar, 
-  MessageSquare, 
-  Heart, 
-  Sprout, 
-  Sparkles, 
-  User as UserIcon,
-  Lock,
-  Upload,
-  AlertCircle,
-  CheckCircle,
-  Save,
-  Loader,
-  Droplets,
-  Wind,
-  DollarSign,
-  ArrowUpRight,
-  ArrowDownRight,
-  Bot,
-  Send,
-  Volume2,
-  Leaf,
-  ChevronRight,
-  ShieldCheck,
-  Smartphone,
-  Zap,
-  Globe,
-  Plus,
-  Trash2,
-  LogOut,
-  Mic,
-  MicOff
+  Activity, Sun, Moon, Camera, TrendingUp, Calendar, 
+  MessageSquare, Heart, Sprout, Sparkles, Upload, 
+  AlertCircle, CheckCircle, Save, Loader, Droplets, 
+  Wind, DollarSign, ArrowUpRight, ArrowDownRight, 
+  Bot, Send, Volume2, Leaf, ChevronRight, ShieldCheck, 
+  Smartphone, Zap, Globe, Plus, Trash2, LogOut, 
+  User as UserIcon, Lock, Mic, MicOff, CloudRain, Users
 } from 'lucide-react';
 
 // --- FIREBASE IMPORTS ---
 import { initializeApp } from 'firebase/app';
 import { 
-  getAuth, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged
+  getAuth, createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, signOut, onAuthStateChanged 
 } from 'firebase/auth';
 import { 
-  getFirestore, 
-  collection, 
-  addDoc, 
-  query, 
-  onSnapshot, 
-  deleteDoc, 
-  doc, 
-  updateDoc 
+  getFirestore, collection, addDoc, query, 
+  onSnapshot, deleteDoc, doc, updateDoc 
 } from 'firebase/firestore';
 
-// --- FIREBASE CONFIGURATION ---
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+// --- CONFIGURATION ---
+const GEMINI_API_KEY = "";// <-- INSERT YOUR GOOGLE GEMINI API KEY HERE
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "",// <-- INSERT YOUR FIREBASE API KEY HERE
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
 
+const appId = "agri-health-hackathon-v1"; 
+
+// --- INITIALIZE FIREBASE ---
 let app, auth, db;
 try {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
 } catch (e) {
-  console.warn("Firebase not initialized:", e);
+  console.warn("Firebase initialization failed:", e);
 }
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000/api";
 
+// --- API SERVICES ---
 const callGeminiAPI = async (payload, endpoint = "generateContent", retries = 3) => {
-// Read Gemini API key from Vite env var (create .env.local with VITE_GEMINI_API_KEY=your_key)
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
-
-if (!apiKey) {
-    console.warn('VITE_GEMINI_API_KEY not found. Add it to .env.local and restart the dev server.');
-}
   const baseUrl = "https://generativelanguage.googleapis.com/v1beta/models";
   let model = "gemini-2.5-flash-preview-09-2025";
   let finalEndpoint = endpoint;
@@ -88,17 +55,21 @@ if (!apiKey) {
     finalEndpoint = "generateContent";
   }
 
-  const url = `${baseUrl}/${model}:${finalEndpoint}?key=${apiKey}`;
+  const url = `${baseUrl}/${model}:${finalEndpoint}?key=${GEMINI_API_KEY}`;
   
   for (let i = 0; i < retries; i++) {
-    try {  
+    try {
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        if (response.status === 429) throw new Error("API Quota Exceeded (429).");
+        if (response.status === 403) throw new Error("Invalid API Key (403).");
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       return await response.json();
     } catch (error) {
       if (i === retries - 1) throw error;
@@ -116,9 +87,7 @@ const fetchWeatherData = async () => {
     const response = await fetch(
       `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`
     );
-    
     const data = await response.json();
-    
     return {
       temp: Math.round(data.main.temp),
       humidity: data.main.humidity,
@@ -132,163 +101,379 @@ const fetchWeatherData = async () => {
   }
 };
 
-// --- SUB-COMPONENTS DEFINED INTERNALLY ---
+// --- LANDING PAGE ASSETS & UTILS ---
+const IMAGES = {
+  farmer: "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?q=80&w=800&auto=format&fit=crop",
+  crop: "https://images.unsplash.com/photo-1592982537447-6f2a6a0c7c18?q=80&w=800&auto=format&fit=crop",
+  tech: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=800&auto=format&fit=crop",
+  landscape: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1600&auto=format&fit=crop"
+};
 
-const LandingPage = ({ onLaunch, isDark, setIsDark }) => {
+const useOnScreen = (options) => {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) setVisible(true);
+    }, options);
+    if (ref.current) observer.observe(ref.current);
+    return () => { if (ref.current) observer.unobserve(ref.current); };
+  }, [ref, options]);
+  return [ref, visible];
+};
+
+const CountUp = ({ end, duration = 2000 }) => {
+  const [count, setCount] = useState(0);
+  const [ref, visible] = useOnScreen({ threshold: 0.5 });
+
+  useEffect(() => {
+    if (!visible) return;
+    let start = 0;
+    const increment = end / (duration / 16);
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= end) {
+        setCount(end);
+        clearInterval(timer);
+      } else {
+        setCount(Math.ceil(start));
+      }
+    }, 16);
+    return () => clearInterval(timer);
+  }, [visible, end, duration]);
+
+  return <span ref={ref}>{count.toLocaleString()}+</span>;
+};
+
+const TiltCard = ({ children, className, bgImage }) => {
+  const [rotate, setRotate] = useState({ x: 0, y: 0 });
+
+  const onMouseMove = (e) => {
+    const card = e.currentTarget;
+    const box = card.getBoundingClientRect();
+    const x = e.clientX - box.left;
+    const y = e.clientY - box.top;
+    const centerX = box.width / 2;
+    const centerY = box.height / 2;
+    const rotateX = (y - centerY) / 10;
+    const rotateY = (centerX - x) / 10;
+
+    setRotate({ x: rotateX, y: rotateY });
+  };
+
+  const onMouseLeave = () => setRotate({ x: 0, y: 0 });
+
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${isDark ? 'bg-gray-900 text-white' : 'bg-gradient-to-b from-emerald-50 via-teal-50 to-white text-gray-900'}`}>
+    <div
+      className={`relative overflow-hidden transition-all duration-200 ease-out transform ${className}`}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
+      style={{
+        transform: `perspective(1000px) rotateX(${rotate.x}deg) rotateY(${rotate.y}deg) scale3d(1.02, 1.02, 1.02)`,
+      }}
+    >
+      {bgImage && (
+        <>
+          <div 
+            className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-110"
+            style={{ backgroundImage: `url(${bgImage})` }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
+        </>
+      )}
+      <div className="relative z-10 h-full w-full flex flex-col items-center justify-center">
+        {children}
+      </div>
+    </div>
+  );
+};
+
+const FeatureCard = ({ feature, isDark, index }) => {
+  return (
+    <div 
+      className={`group relative p-8 rounded-3xl transition-all duration-500 hover:-translate-y-2
+      ${isDark 
+        ? 'bg-gray-800/50 hover:bg-gray-800 border border-gray-700' 
+        : 'bg-white hover:shadow-2xl hover:shadow-green-100 border border-gray-100 shadow-sm'}`}
+    >
+      <div className={`absolute inset-0 bg-gradient-to-br ${feature.from} ${feature.to} opacity-0 group-hover:opacity-5 rounded-3xl transition-opacity duration-500`}></div>
+      <div className={`relative w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-500 group-hover:rotate-6
+        ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+        <feature.icon className={`w-8 h-8 ${feature.color}`} />
+      </div>
+      <h3 className="text-xl font-bold mb-3 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
+        {feature.title}
+      </h3>
+      <p className={`leading-relaxed ${isDark ? 'text-gray-400 group-hover:text-gray-300' : 'text-gray-600 group-hover:text-gray-700'}`}>
+        {feature.desc}
+      </p>
+    </div>
+  );
+};
+
+// --- LANDING PAGE COMPONENT ---
+const LandingPage = ({ onLaunch, isDark, setIsDark }) => {
+  const [scrolled, setScrolled] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setMousePos({ 
+        x: (e.clientX / window.innerWidth) * 20, 
+        y: (e.clientY / window.innerHeight) * 20 
+      });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  const scrollToAbout = () => {
+    const aboutSection = document.getElementById('about');
+    if (aboutSection) {
+      aboutSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const styles = `
+    @keyframes float { 0% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-20px) rotate(5deg); } 100% { transform: translateY(0px) rotate(0deg); } }
+    @keyframes gradient-x { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
+    @keyframes typewriter { from { width: 0; } to { width: 100%; } }
+    @keyframes blink { 50% { border-color: transparent; } }
+    
+    .animate-float { animation: float 6s ease-in-out infinite; }
+    .animate-gradient-x { background-size: 200% 200%; animation: gradient-x 15s ease infinite; }
+    .animate-blob { animation: blob 7s infinite; }
+    .typing-cursor { overflow: hidden; white-space: nowrap; border-right: 4px solid #10B981; animation: typewriter 3s steps(40) 1s 1 normal both, blink 0.75s step-end infinite; }
+  `;
+
+  return (
+    <div className={`min-h-screen transition-colors duration-700 overflow-x-hidden ${isDark ? 'bg-gray-900 text-white' : 'bg-slate-50 text-gray-900'}`}>
+      <style>{styles}</style>
+      
+      {/* Dynamic Background Particles */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {[...Array(6)].map((_, i) => (
+          <div 
+            key={i}
+            className={`absolute opacity-10 ${isDark ? 'text-green-800' : 'text-green-300'} animate-float`}
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${i * 1.5}s`,
+              transform: `translate(${mousePos.x * -1}px, ${mousePos.y * -1}px)`
+            }}
+          >
+            {i % 2 === 0 ? <Leaf size={40 + Math.random() * 40} /> : <Sprout size={40 + Math.random() * 40} />}
+          </div>
+        ))}
+        <div 
+          className={`absolute top-0 left-0 w-full h-full opacity-30 filter blur-[100px] animate-gradient-x
+          ${isDark 
+            ? 'bg-gradient-to-r from-gray-900 via-green-900 to-emerald-900' 
+            : 'bg-gradient-to-r from-green-100 via-emerald-100 to-teal-100'}`} 
+        />
+      </div>
+
       {/* Navbar */}
-      <nav className={`fixed w-full z-50 backdrop-blur-md border-b transition-colors duration-300 ${isDark ? 'bg-gray-900/80 border-gray-700' : 'bg-white/70 border-gray-200'}`}>
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <div className="bg-gradient-to-tr from-green-500 to-emerald-600 p-2 rounded-xl shadow-lg">
+      <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? (isDark ? 'bg-gray-900/90 border-b border-gray-800 backdrop-blur-md py-3' : 'bg-white/80 border-b border-green-100 backdrop-blur-md py-3') : 'bg-transparent py-5'}`}>
+        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+          <div className="flex items-center space-x-2 group cursor-pointer">
+            <div className="bg-gradient-to-tr from-green-500 to-emerald-600 p-2 rounded-xl shadow-lg group-hover:rotate-12 transition-transform duration-300">
               <Leaf className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold tracking-tight">AgriHealth</span>
+            <span className={`text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r ${isDark ? 'from-white to-gray-400' : 'from-gray-900 to-green-800'}`}>
+              AgriHealth
+            </span>
           </div>
           
           <div className="flex items-center space-x-6">
             <button 
-              onClick={() => setIsDark(!isDark)}
-              className={`p-2 rounded-full transition-all duration-300 ${isDark ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700' : 'bg-white text-gray-600 hover:bg-gray-100 shadow-sm'}`}
+              onClick={scrollToAbout}
+              className={`hidden md:block font-medium transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-green-600'}`}
             >
-              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              About Us
+            </button>
+            <button 
+              onClick={() => setIsDark(!isDark)}
+              className={`p-2.5 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95 ${isDark ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700 ring-2 ring-gray-700' : 'bg-white text-orange-400 hover:bg-orange-50 shadow-md ring-1 ring-orange-100'}`}
+            >
+              {isDark ? <Sun className="w-5 h-5 animate-spin-slow" /> : <Moon className="w-5 h-5" />}
             </button>
             <button 
               onClick={onLaunch}
-              className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-6 py-2.5 rounded-full font-semibold hover:opacity-90 transition transform hover:-translate-y-0.5 active:translate-y-0"
+              className="relative overflow-hidden group bg-gradient-to-r from-green-600 to-emerald-600 text-white px-7 py-2.5 rounded-full font-semibold shadow-lg shadow-green-500/30 transition-all hover:shadow-green-500/50 hover:-translate-y-0.5"
             >
-              Launch App
+              <span className="relative z-10 flex items-center">
+                Launch App <Zap className="w-4 h-4 ml-2 group-hover:text-yellow-300 transition-colors" />
+              </span>
+              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
             </button>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <main className="pt-32 pb-24 px-6 max-w-7xl mx-auto flex flex-col md:flex-row items-center">
-        <div className="md:w-1/2 mb-12 md:mb-0 z-10">
-          <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium mb-8 ${isDark ? 'bg-green-900/30 text-green-400 border border-green-800' : 'bg-green-100 text-green-800'}`}>
-            <span className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
+      <main className="relative pt-36 pb-24 px-6 max-w-7xl mx-auto flex flex-col md:flex-row items-center z-10">
+        <div className="md:w-1/2 mb-16 md:mb-0">
+          <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium mb-8 transform hover:scale-105 transition-transform cursor-default ${isDark ? 'bg-green-900/30 text-green-400 border border-green-800' : 'bg-white shadow-md text-green-700 border border-green-100'}`}>
+            <span className="relative flex h-3 w-3 mr-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
             Empowering Nepal's Agriculture 🇳🇵
           </div>
           
           <h1 className="text-5xl md:text-7xl font-extrabold leading-tight mb-6 tracking-tight">
             Cultivating the <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-teal-400">Future</span> of Farming
+            <span className="inline-block typing-cursor text-transparent bg-clip-text bg-gradient-to-r from-green-500 via-emerald-400 to-teal-500 pb-2">
+              Future
+            </span> <br/>
+            of Farming
           </h1>
           
-          <p className={`text-xl mb-10 leading-relaxed max-w-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            Experience the power of AI-driven crop diagnosis, localized farming calendars, and expert assistance. 
+          <p className={`text-xl mb-10 leading-relaxed max-w-lg transition-opacity duration-500 delay-500 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            AI-driven crop diagnosis and expert assistance, now with real-time visual monitoring for every season.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4">
             <button 
               onClick={onLaunch}
-              className="flex items-center justify-center bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-full font-bold text-lg hover:shadow-lg hover:shadow-green-500/30 transition transform hover:-translate-y-1"
+              className="group flex items-center justify-center bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-8 py-4 rounded-full font-bold text-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0"
             >
-              Get Started Free <ChevronRight className="w-5 h-5 ml-2"/>
-            </button>
-            <button className={`flex items-center justify-center px-8 py-4 rounded-full font-bold text-lg border transition ${isDark ? 'border-gray-700 text-gray-300 hover:bg-gray-800' : 'border-gray-200 text-gray-700 bg-white hover:bg-gray-50'}`}>
-              Learn More
+              Get Started Free 
+              <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
         </div>
 
-        {/* Hero Visual */}
-        <div className="md:w-1/2 relative">
-          <div className={`absolute top-0 right-0 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob ${isDark ? 'hidden' : ''}`}></div>
-          <div className={`absolute bottom-0 left-0 w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000 ${isDark ? 'hidden' : ''}`}></div>
+        {/* Hero Visual - Interactive PHOTO Tilt Cards */}
+        <div className="md:w-1/2 relative perspective-1000">
+          <div className={`absolute top-10 right-10 w-80 h-80 bg-green-400 rounded-full mix-blend-multiply filter blur-[80px] opacity-40 animate-blob ${isDark ? 'mix-blend-overlay opacity-20' : ''}`}></div>
+          <div className={`absolute bottom-10 left-10 w-80 h-80 bg-teal-400 rounded-full mix-blend-multiply filter blur-[80px] opacity-40 animate-blob animation-delay-2000 ${isDark ? 'mix-blend-overlay opacity-20' : ''}`}></div>
           
-          <div className="relative z-10 grid grid-cols-2 gap-4 transform rotate-6 hover:rotate-0 transition duration-700 ease-out">
-            <div className={`p-6 rounded-2xl shadow-xl backdrop-blur-xl border ${isDark ? 'bg-gray-800/60 border-gray-700' : 'bg-white/60 border-white/50'} flex flex-col items-center justify-center h-48`}>
-              <div className="bg-green-100 p-4 rounded-full mb-3 dark:bg-green-900/30">
-                <Camera className="w-8 h-8 text-green-600 dark:text-green-400" />
+          <div className="relative z-10 grid grid-cols-2 gap-5 transform rotate-3 hover:rotate-0 transition duration-700 ease-out p-4">
+            
+            <TiltCard bgImage={IMAGES.crop} className={`rounded-3xl shadow-2xl backdrop-blur-xl border ${isDark ? 'border-gray-700' : 'border-white/60'} h-48 group`}>
+              <div className="bg-white/20 backdrop-blur-md p-3 rounded-full mb-2 group-hover:scale-110 transition-transform duration-300 border border-white/30">
+                <Camera className="w-6 h-6 text-white" />
               </div>
-              <span className="font-bold">AI Diagnosis</span>
-            </div>
-            <div className={`p-6 rounded-2xl shadow-xl backdrop-blur-xl border translate-y-8 ${isDark ? 'bg-gray-800/60 border-gray-700' : 'bg-white/60 border-white/50'} flex flex-col items-center justify-center h-48`}>
-              <div className="bg-indigo-100 p-4 rounded-full mb-3 dark:bg-indigo-900/30">
-                <Sprout className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+              <span className="font-bold text-lg text-white drop-shadow-md">AI Diagnosis</span>
+            </TiltCard>
+            
+            <TiltCard bgImage={IMAGES.landscape} className={`rounded-3xl shadow-2xl backdrop-blur-xl border translate-y-12 ${isDark ? 'border-gray-700' : 'border-white/60'} h-48 group`}>
+              <div className="bg-white/20 backdrop-blur-md p-3 rounded-full mb-2 group-hover:scale-110 transition-transform duration-300 border border-white/30">
+                <Sprout className="w-6 h-6 text-white" />
               </div>
-              <span className="font-bold">Smart Calendar</span>
-            </div>
-            <div className={`p-6 rounded-2xl shadow-xl backdrop-blur-xl border ${isDark ? 'bg-gray-800/60 border-gray-700' : 'bg-white/60 border-white/50'} flex flex-col items-center justify-center h-48`}>
-              <div className="bg-blue-100 p-4 rounded-full mb-3 dark:bg-blue-900/30">
-                <MessageSquare className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+              <span className="font-bold text-lg text-white drop-shadow-md">Smart Calendar</span>
+            </TiltCard>
+            
+            <TiltCard bgImage={IMAGES.farmer} className={`rounded-3xl shadow-2xl backdrop-blur-xl border ${isDark ? 'border-gray-700' : 'border-white/60'} h-48 group`}>
+              <div className="bg-white/20 backdrop-blur-md p-3 rounded-full mb-2 group-hover:scale-110 transition-transform duration-300 border border-white/30">
+                <MessageSquare className="w-6 h-6 text-white" />
               </div>
-              <span className="font-bold">Expert Chat</span>
-            </div>
-            <div className={`p-6 rounded-2xl shadow-xl backdrop-blur-xl border translate-y-8 ${isDark ? 'bg-gray-800/60 border-gray-700' : 'bg-white/60 border-white/50'} flex flex-col items-center justify-center h-48`}>
-              <div className="bg-orange-100 p-4 rounded-full mb-3 dark:bg-orange-900/30">
-                <DollarSign className="w-8 h-8 text-orange-600 dark:text-orange-400" />
+              <span className="font-bold text-lg text-white drop-shadow-md">Expert Chat</span>
+            </TiltCard>
+            
+            <TiltCard bgImage={IMAGES.tech} className={`rounded-3xl shadow-2xl backdrop-blur-xl border translate-y-12 ${isDark ? 'border-gray-700' : 'border-white/60'} h-48 group`}>
+              <div className="bg-white/20 backdrop-blur-md p-3 rounded-full mb-2 group-hover:scale-110 transition-transform duration-300 border border-white/30">
+                <DollarSign className="w-6 h-6 text-white" />
               </div>
-              <span className="font-bold">Market Rates</span>
-            </div>
+              <span className="font-bold text-lg text-white drop-shadow-md">Market Rates</span>
+            </TiltCard>
           </div>
         </div>
       </main>
 
       {/* Features Grid */}
-      <section className={`py-24 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Everything you need to grow</h2>
-            <p className={`text-lg max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              Our platform combines cutting-edge technology with local agricultural knowledge to help you maximize your harvest.
+      <section className={`py-24 relative ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-teal-500">Everything you need to grow</h2>
+            <p className={`text-xl max-w-2xl mx-auto ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              Combining cutting-edge technology with the wisdom of the fields.
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { icon: ShieldCheck, title: "Precision Detection", desc: "Detect diseases with 95% accuracy using our advanced Gemini AI vision models.", color: "text-green-600", bg: "bg-green-100", border: "border-green-200" },
-              { icon: Calendar, title: "Seasonal Planning", desc: "Get customized schedules for planting, fertilizing, and harvesting based on your location.", color: "text-indigo-600", bg: "bg-indigo-100", border: "border-indigo-200" },
-              { icon: Smartphone, title: "Mobile First", desc: "Designed for the field. Works perfectly on all mobile devices with an intuitive interface.", color: "text-blue-600", bg: "bg-blue-100", border: "border-blue-200" },
-              { icon: Zap, title: "Real-time Insights", desc: "Stay updated with live weather forecasts and current market prices across Nepal.", color: "text-orange-600", bg: "bg-orange-100", border: "border-orange-200" },
+              { icon: ShieldCheck, title: "Precision Detection", desc: "Detect diseases with 95% accuracy using our advanced Gemini AI vision models.", color: "text-green-600", from: "from-green-500", to: "to-emerald-500" },
+              { icon: Calendar, title: "Seasonal Planning", desc: "Get customized schedules for planting, fertilizing, and harvesting based on your location.", color: "text-indigo-600", from: "from-indigo-500", to: "to-purple-500" },
+              { icon: Smartphone, title: "Mobile First", desc: "Designed for the field. Works perfectly on all mobile devices with an intuitive interface.", color: "text-blue-600", from: "from-blue-500", to: "to-cyan-500" },
+              { icon: Zap, title: "Real-time Insights", desc: "Stay updated with live weather forecasts and current market prices across Nepal.", color: "text-orange-600", from: "from-orange-500", to: "to-red-500" },
             ].map((feature, idx) => (
-              <div key={idx} className={`p-8 rounded-2xl transition duration-300 hover:scale-105 ${isDark ? 'bg-gray-800 border border-gray-700' : `bg-white border ${feature.border} shadow-sm hover:shadow-xl`}`}>
-                <div className={`w-14 h-14 ${isDark ? 'bg-gray-700' : feature.bg} ${feature.color} rounded-xl flex items-center justify-center mb-6`}>
-                  <feature.icon className="w-7 h-7" />
+              <FeatureCard key={idx} feature={feature} isDark={isDark} index={idx} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Impact Stats - Parallax Background */}
+      <section className="relative py-32 text-white overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-fixed bg-center bg-cover"
+          style={{ backgroundImage: `url(${IMAGES.landscape})` }}
+        ></div>
+        <div className="absolute inset-0 bg-green-900/80 backdrop-blur-sm"></div>
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="grid md:grid-cols-3 gap-12 text-center divide-y md:divide-y-0 md:divide-x divide-green-400/30">
+            {[
+              { val: 10000, label: "Active Farmers", icon: Globe },
+              { val: 50, label: "Districts Covered", icon: CloudRain },
+              { val: 1000000, label: "Scans Performed", icon: Camera }
+            ].map((stat, i) => (
+              <div key={i} className="pt-8 md:pt-0 hover:transform hover:scale-105 transition-transform duration-300">
+                <stat.icon className="w-10 h-10 mx-auto mb-4 text-green-300 opacity-90" />
+                <div className="text-5xl font-extrabold mb-2 text-white drop-shadow-lg">
+                   <CountUp end={stat.val} />
                 </div>
-                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                <p className={`leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{feature.desc}</p>
+                <div className="text-green-100 font-medium text-lg tracking-wide uppercase">{stat.label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Impact Stats */}
-      <section className="py-20 bg-gradient-to-r from-emerald-900 to-green-900 text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 pattern-grid-lg"></div>
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid md:grid-cols-3 gap-8 text-center">
-            <div>
-              <div className="text-5xl font-extrabold mb-2">10k+</div>
-              <div className="text-green-200 font-medium">Active Farmers</div>
-            </div>
-            <div>
-              <div className="text-5xl font-extrabold mb-2">50+</div>
-              <div className="text-green-200 font-medium">Districts Covered</div>
-            </div>
-            <div>
-              <div className="text-5xl font-extrabold mb-2">1M+</div>
-              <div className="text-green-200 font-medium">Scans Performed</div>
-            </div>
+      {/* --- ABOUT US SECTION (New) --- */}
+      <section id="about" className={`py-24 ${isDark ? 'bg-gray-800' : 'bg-green-50'}`}>
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <div className="inline-flex items-center justify-center p-3 mb-6 bg-green-100 rounded-full dark:bg-green-900/30">
+            <Users className="w-8 h-8 text-green-600 dark:text-green-400" />
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">Who We Are</h2>
+          <p className={`text-lg md:text-xl leading-relaxed mb-8 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+            We are a team of student developers participating in the <strong>NMSS IT Fest Hackathon</strong>. 
+            Our goal is to revolutionize traditional farming in Nepal by leveraging the power of Artificial Intelligence. 
+            We believe that by providing farmers with instant disease diagnosis and smart planning tools, we can ensure better harvests and sustainable livelihoods.
+          </p>
+          <div className="flex justify-center gap-4">
+            <span className={`px-4 py-2 rounded-full text-sm font-medium ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-white text-gray-600 shadow-sm'}`}>🚀 Innovation</span>
+            <span className={`px-4 py-2 rounded-full text-sm font-medium ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-white text-gray-600 shadow-sm'}`}>🌱 Sustainability</span>
+            <span className={`px-4 py-2 rounded-full text-sm font-medium ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-white text-gray-600 shadow-sm'}`}>🤝 Community</span>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className={`py-12 px-6 border-t ${isDark ? 'bg-gray-900 border-gray-800' : 'bg-gray-50 border-gray-200'}`}>
+      <footer className={`py-12 px-6 border-t relative z-10 ${isDark ? 'bg-gray-950 border-gray-900' : 'bg-white border-gray-100'}`}>
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
-          <div className="flex items-center space-x-2 mb-4 md:mb-0">
-            <div className="bg-gray-200 dark:bg-gray-800 p-2 rounded-lg">
-              <Leaf className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          <div className="flex items-center space-x-3 mb-4 md:mb-0">
+            <div className="bg-gradient-to-tr from-gray-200 to-gray-300 dark:from-gray-800 dark:to-gray-700 p-2 rounded-lg">
+              <Leaf className="w-5 h-5 text-gray-600 dark:text-gray-300" />
             </div>
-            <span className="font-bold text-gray-700 dark:text-gray-300">AgriHealth Monitor</span>
+            <span className="font-bold text-xl text-gray-700 dark:text-gray-300">AgriHealth Monitor</span>
           </div>
-          <div className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-            © 2024 Green Nepal Initiative. Built for the Hackathon.
+          <div className={`text-sm flex flex-col md:flex-row items-center gap-4 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+            <span>© 2024 Agri Nepal Initiative.</span>
+            <span className="hidden md:inline">•</span>
+            <span>Built with ❤️ for the Hackathon</span>
           </div>
         </div>
       </footer>
@@ -390,7 +575,7 @@ const AuthTab = ({ user, isDark }) => {
   );
 };
 
-const ScanTab = ({ isDark, onAddTask, onSaveHistory, setActiveTab, user }) => {
+const ScanTab = ({ isDark, onAddTask, onSaveHistory, setActiveTab, user, setApiError }) => {
   const [image, setImage] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
@@ -398,6 +583,7 @@ const ScanTab = ({ isDark, onAddTask, onSaveHistory, setActiveTab, user }) => {
 
   const saveToHistory = async (result) => {
     if (!user) return alert("Please login to save history!");
+    if (!db) return alert("Database not initialized");
     try {
       await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'history'), {
         ...result,
@@ -425,6 +611,7 @@ const ScanTab = ({ isDark, onAddTask, onSaveHistory, setActiveTab, user }) => {
   const analyzeImage = async (imageDataUrl) => {
     setAnalyzing(true);
     setAnalysis(null);
+    setApiError(null);
 
     try {
       const base64Data = imageDataUrl.split(',')[1];
@@ -463,20 +650,30 @@ const ScanTab = ({ isDark, onAddTask, onSaveHistory, setActiveTab, user }) => {
       if (resultText) {
         resultText = resultText.replace(/```json/g, '').replace(/```/g, '');
         const parsedAnalysis = JSON.parse(resultText);
-        setAnalysis({ ...parsedAnalysis, image: imageDataUrl, timestamp: new Date().toLocaleString() });
+        setAnalysis({
+          ...parsedAnalysis,
+          image: imageDataUrl,
+          timestamp: new Date().toLocaleString()
+        });
       } else {
         throw new Error("No analysis result");
       }
 
     } catch (error) {
       console.error("Analysis failed:", error);
+      let errorMessage = 'Could not connect to AI service.';
+      if (error.message.includes('429')) errorMessage = 'API Quota Exceeded (429). Please try again in a few minutes.';
+      else if (error.message.includes('403')) errorMessage = 'Invalid API Key (403). Please check your configuration.';
+      setApiError(errorMessage);
       setAnalysis({
         status: 'Error',
         confidence: 0,
-        issues_en: ['Could not connect to AI service.'],
+        image: imageDataUrl,
+        timestamp: new Date().toLocaleString(),
+        issues_en: [errorMessage],
         issues_ne: ['AI सेवामा जडान गर्न सकिएन।'],
-        recommendations_en: ['Please check your connection or API key.'],
-        recommendations_ne: ['कृपया आफ्नो इन्टरनेट जडान वा API कुञ्जी जाँच गर्नुहोस्।']
+        recommendations_en: ['Check connection/key.'],
+        recommendations_ne: ['इन्टरनेट/API कुञ्जी जाँच गर्नुहोस्।']
       });
     } finally {
       setAnalyzing(false);
@@ -709,7 +906,7 @@ const DashboardTab = ({ isDark }) => {
   );
 };
 
-const PlannerTab = ({ isDark, onAddTask, setActiveTab }) => {
+const PlannerTab = ({ isDark, onAddTask, setActiveTab, setApiError }) => {
   const [selectedCrop, setSelectedCrop] = useState('');
   const [loading, setLoading] = useState(false);
   const [plan, setPlan] = useState(null);
@@ -718,6 +915,7 @@ const PlannerTab = ({ isDark, onAddTask, setActiveTab }) => {
     if (!selectedCrop) return;
     setLoading(true);
     setPlan(null);
+    setApiError(null);
 
     try {
       const prompt = `
@@ -743,7 +941,7 @@ const PlannerTab = ({ isDark, onAddTask, setActiveTab }) => {
       }
     } catch (error) {
       console.error(error);
-      alert("Could not generate plan. Try again.");
+      setApiError(error.message);
     } finally {
       setLoading(false);
     }
@@ -859,7 +1057,7 @@ const TasksTab = ({ isDark, tasks, onAddTask, onToggle, onDelete }) => {
   );
 };
 
-const AssistantTab = ({ isDark }) => {
+const AssistantTab = ({ isDark, setApiError }) => {
   const [chatMessages, setChatMessages] = useState([
     { id: 1, sender: 'bot', text: 'Namaste! I am your Agri-Assistant. You can speak to me in Nepali or English!' }
   ]);
@@ -900,6 +1098,7 @@ const AssistantTab = ({ isDark }) => {
     setChatMessages(prev => [...prev, { id: Date.now(), sender: 'user', text: userText }]);
     setChatInput('');
     setIsChatLoading(true);
+    setApiError(null);
 
     try {
       const prompt = `
@@ -915,6 +1114,7 @@ const AssistantTab = ({ isDark }) => {
       setChatMessages(prev => [...prev, { id: Date.now(), sender: 'bot', text: botResponse }]);
     } catch (error) {
       console.error(error);
+      setApiError(error.message);
       setChatMessages(prev => [...prev, { id: Date.now(), sender: 'bot', text: "Connection error. Please try again." }]);
     } finally {
       setIsChatLoading(false);
@@ -980,7 +1180,7 @@ const AssistantTab = ({ isDark }) => {
         </div>
         <div>
           <h2 className="font-bold flex items-center">Agri-Assistant <Sparkles className="w-3 h-3 ml-2 text-yellow-500"/></h2>
-          <p className="text-xs opacity-60">Online • Powered by Gemini</p>
+          <p className="text-xs opacity-60">Online • Voice Enabled</p>
         </div>
       </div>
 
@@ -1009,18 +1209,30 @@ const AssistantTab = ({ isDark }) => {
       </div>
 
       <div className={`p-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <button 
+            onClick={startListening}
+            className={`p-3 rounded-full transition-all ${
+              isListening 
+                ? 'bg-red-500 text-white animate-pulse shadow-red-500/50 shadow-lg' 
+                : isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+            title="Speak (Nepali/English)"
+          >
+            {isListening ? <MicOff className="w-5 h-5"/> : <Mic className="w-5 h-5"/>}
+          </button>
+
           <input
             type="text"
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-            placeholder="Ask anything..."
-            disabled={isChatLoading}
+            placeholder={isListening ? "Listening..." : "Type or speak..."}
+            disabled={isChatLoading || isListening}
             className={`flex-1 p-3 rounded-full border ${isDark ? 'bg-gray-900 border-gray-700' : 'bg-gray-50 border-gray-200'} focus:outline-none focus:ring-2 focus:ring-green-500`}
           />
           <button 
-            onClick={sendMessage}
+            onClick={() => sendMessage()}
             disabled={isChatLoading}
             className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-full shadow-lg"
           >
@@ -1049,21 +1261,26 @@ const DonateTab = ({ isDark }) => {
       <div className={`border-4 border-dashed rounded-xl p-8 mb-6 inline-block transform hover:scale-105 transition duration-300 ${isDark ? 'border-gray-600 bg-gray-700' : 'border-green-200 bg-green-50'}`}>
         <div className="bg-white p-2 rounded-lg inline-block mb-3">
            <img
-             src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=eSewa-9841234567"
+             src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://esewa.com.np" 
              alt="eSewa QR Code"
              className="w-48 h-48 mx-auto"
            />
         </div>
-        <p className="mt-2 font-bold text-green-600 flex items-center justify-center">
-          Scan with eSewa <ArrowUpRight className="w-4 h-4 ml-1"/>
-        </p>
+        <a 
+          href="https://esewa.com.np" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="mt-2 font-bold text-green-600 flex items-center justify-center hover:underline"
+        >
+          Open eSewa <ArrowUpRight className="w-4 h-4 ml-1"/>
+        </a>
       </div>
 
       <div className={`p-4 rounded-lg text-left max-w-sm mx-auto ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
-        <p className="text-sm opacity-70 mb-2 uppercase tracking-wider font-bold">Manual Transfer</p>
+        <p className="text-sm opacity-70 mb-2 uppercase tracking-wider font-bold">Manual Transfer Details</p>
         <div className="flex justify-between items-center mb-1">
           <span className="opacity-80">eSewa ID:</span>
-          <span className="font-mono font-bold select-all">98XXXXXXXX</span>
+          <span className="font-mono font-bold select-all">9857030228</span>
         </div>
         <div className="flex justify-between items-center">
           <span className="opacity-80">Name:</span>
@@ -1077,7 +1294,7 @@ const DonateTab = ({ isDark }) => {
 // --- MAIN APP CONTROLLER ---
 const App = () => {
   const [view, setView] = useState('landing'); // 'landing' or 'app'
-  const [isDark, setIsDark] = useState(false); 
+  const [isDark, setIsDark] = useState(false); // Global Theme State
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -1100,7 +1317,7 @@ const App = () => {
     );
   }
 
-  // Pass user state and firebase instances to the dashboard
+  // Pass user state to the dashboard
   return (
     <PlantHealthApp 
       isDark={isDark} 
@@ -1187,6 +1404,7 @@ const PlantHealthApp = ({ isDark, setIsDark, user, auth, db }) => {
 
   const addToHistory = (scanResult) => {
     setHistory([scanResult, ...history]);
+    // Note: Cloud saving is handled inside ScanTab directly if user is logged in
   };
 
   return (
@@ -1332,4 +1550,3 @@ const PlantHealthApp = ({ isDark, setIsDark, user, auth, db }) => {
 };
 
 export default App;
-    

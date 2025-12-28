@@ -126,5 +126,8 @@ This project was built for the NMSS IT Fest Hackathon.
 Team Members:
 
 Aakashan Subedi - Full Stack Developer
+Sweekar Rijal - UI/UX designer
+Yug Kharel - Graphics designr
+Anmol Pandey - Presentator
 
 Made with ❤️ in Nepal. 🇳🇵
