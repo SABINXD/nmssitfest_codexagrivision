@@ -21,10 +21,15 @@ import {
 } from 'firebase/firestore';
 
 // --- CONFIGURATION ---
-const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"; // Replace with your Gemini API Key
+const GEMINI_API_KEY = "AIzaSyAqIsSCGeHDs4PEh6Yf4ZW_Jm73WzRWMCQ";
 
 const firebaseConfig = {
-// Your Firebase configuration here
+  apiKey: "AIzaSyBt7K_FMcN-vEZ-GWh36FaWcaEr-4cYN0Q",
+  authDomain: "agri-vision-app-75d60.firebaseapp.com",
+  projectId: "agri-vision-app-75d60",
+  storageBucket: "agri-vision-app-75d60.firebasestorage.app",
+  messagingSenderId: "92636573514",
+  appId: "1:92636573514:web:d6974274d90dd6a138dbb3"
 };
 
 const appId = "agri-health-hackathon-v1"; 

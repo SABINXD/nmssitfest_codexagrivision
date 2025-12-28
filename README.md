@@ -1,133 +1,62 @@
-🌱 AgriHealth Monitor (कृषि स्वास्थ्य)
+# 🌱 AgriHealth Monitor (कृषि स्वास्थ्य)
 
-Empowering Nepal's farmers with AI-driven diagnostics, smart planning, and voice assistance.
+<div align="center">
 
-📖 Overview
+  ![AgriHealth Banner](https://images.unsplash.com/photo-1625246333195-78d9c38ad449?q=80&w=1200&auto=format&fit=crop)
 
-AgriHealth Monitor is a comprehensive digital companion designed specifically for rural farmers in Nepal. It bridges the gap between traditional farming and modern technology by providing instant access to agricultural expertise through Artificial Intelligence.
+  <br />
 
-We aim to solve the lack of immediate expert consultation for crop diseases and the difficulty in accessing localized farming schedules.
+  ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+  ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+  ![Gemini AI](https://img.shields.io/badge/Google%20Gemini%20AI-8E75B2?style=for-the-badge&logo=googlebard&logoColor=white)
+  ![Firebase](https://img.shields.io/badge/Firebase-039BE5?style=for-the-badge&logo=Firebase&logoColor=white)
 
-✨ Key Features
+  <h3>Empowering Nepal's farmers with AI-driven diagnostics, smart planning, and voice assistance.</h3>
 
-1. 📸 AI Plant Diagnosis (Doctor)
+  [**View Demo**](https://agrihealth-monitor.vercel.app/) • [**Report Bug**](https://github.com/SABINXD/nmssitfest_codexagrivision/issues)
 
-Instant Scan: Upload a photo of a leaf or crop.
+</div>
 
-Gemini Vision: Detects diseases, pests, or nutrient deficiencies with high accuracy.
+---
 
-Dual Language: Provides diagnosis and actionable remedies in English and Nepali (Devanagari).
+## 📱 App Previews
 
-2. 🌱 Smart Crop Planner (Kheti-Paati)
+We believe in a **Mobile-First** approach for farmers. Here is how AgriHealth looks in action:
 
-Generative Planning: Select a crop (Rice, Maize, Wheat, etc.) and get a customized 4-stage farming calendar based on the current date in Nepal.
+| **Landing & Onboarding** | **AI Diagnosis (Dr. Crop)** |
+|:-------------------------:|:---------------------------:|
+| <img src="image-copy.png" width="300" /> | <img src="image.png" width="300" /> |
+| *Modern, accessible entry point.* | *Instant disease detection with 95% accuracy.* |
 
-Actionable Steps: One-click integration to add planning steps directly to the Task Manager.
+| **Smart Dashboard** | **Voice Assistant & Planner** |
+|:-------------------:|:-----------------------------:|
+| <img src="" width="300" /> | <img src="image.png" width="300" /> |
+| *Live weather & Kalimati market rates.* | *Speak in Nepali & plan the season.* |
 
-3. 🤖 Voice-Enabled Agri-Assistant
+---
 
-Speak in Nepali: Uses Web Speech API to listen to farmers' questions in Nepali or English.
+## 🏗️ System Workflow
 
-Expert Advice: Powered by Google Gemini to answer queries about weather, soil, and fertilizers.
+How the data flows from the Farmer's phone to our AI Engine and Database.
 
-Text-to-Speech: The bot "speaks" the answer back, making the app accessible to illiterate farmers.
+```mermaid
+graph TD
+    User([👤 Farmer]) --> |Opens App| Landing[🌐 App Interface]
+    
+    subgraph "Frontend Layer"
+        Landing --> |Log In| Auth[🔥 Firebase Auth]
+        Auth --> |Authenticated| Dashboard[📱 Dashboard]
+    end
 
-4. ✅ Cloud-Synced Task Manager
+    subgraph "AI Core (Google Gemini)"
+        Dashboard --> |Upload Image| Vision[👁️ Gemini Vision]
+        Dashboard --> |Voice Input| Chat[🧠 Gemini Flash]
+        Chat --> |Text Response| TTS[🔊 Gemini TTS]
+    end
 
-Firebase Integration: Tasks and plans are saved to the cloud.
-
-Cross-Device: Access your farming to-do list from any device.
-
-5. 📊 Live Dashboard
-
-Weather: Real-time temperature, humidity, and wind data (OpenWeatherMap).
-
-Market Prices: Live tracking of crop prices (Kalimati Market data).
-
-🛠️ Tech Stack
-
-Frontend: React.js (Vite)
-
-Styling: Tailwind CSS (Glassmorphism & Responsive Design)
-
-AI Models:
-
-gemini-2.5-flash-preview: For Text & Vision analysis.
-
-gemini-2.5-flash-preview-tts: For Text-to-Speech generation.
-
-Backend / Database: Firebase Authentication & Firestore.
-
-Icons: Lucide React.
-
-🚀 Installation & Setup
-
-Follow these steps to run the project locally.
-
-Prerequisites
-
-Node.js (v18+)
-
-npm
-
-Steps
-
-Clone the Repository
-
-git clone [https://github.com/SABINXD/nmssitfest_codexagrivision.git](https://github.com/SABINXD/nmssitfest_codexagrivision.git)
-cd nmssitfest_codexagrivision
-
-
-Install Dependencies
-
-npm install
-
-
-Configure API Keys
-
-Open src/App.jsx.
-
-Find the const apiKey = "" line.
-
-Insert your Google Gemini API Key.
-
-(Optional) Add your Firebase config object in the firebaseConfig section.
-
-Run the App
-
-npm run dev
-
-
-Open in Browser
-Visit http://localhost:5173 to see the app in action.
-
-📱 Mobile Support
-
-This application is built with a Mobile-First approach.
-To test on your phone:
-
-Connect your phone and laptop to the same Wi-Fi.
-
-Run npm run dev -- --host.
-
-Enter the Network IP address shown in the terminal into your phone's browser.
-
-🔮 Future Roadmap
-
-Offline Mode (PWA): Caching data so farmers can use core features without internet.
-
-Community Forum: Connecting farmers with each other.
-
-Government API Integration: Real-time connection to the Ministry of Agriculture's database.
-
-🤝 Contributing
-
-This project was built for the NMSS IT Fest Hackathon.
-Team Members:
-
-Aakashan Subedi - Full Stack Developer
-Sweekar Rijal - UI/UX designer
-Yug Kharel - Graphics designr
-Anmol Pandey - Presentator
-
-Made with ❤️ in Nepal. 🇳🇵
+    subgraph "Data Layer"
+        Vision --> |Save Result| DB[(☁️ Firestore)]
+        Chat --> |Save Plan| DB
+    end
+    
+    DB --> |Sync Tasks| Dashboard
